@@ -1,0 +1,10 @@
+{
+  "name": "Kimotos Motopeças",
+  "description": "E-commerce completo de motopeças e acessórios de alta performance integrado ao Supabase",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

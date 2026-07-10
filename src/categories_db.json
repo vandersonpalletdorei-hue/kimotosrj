@@ -1,0 +1,38 @@
+[
+  {
+    "id": "todos",
+    "name": "Todos os Produtos",
+    "icon": "Sparkles",
+    "description": "O catálogo completo de equipamentos Kimotos"
+  },
+  {
+    "id": "capacetes",
+    "name": "Capacetes",
+    "icon": "ShieldAlert",
+    "description": "Capacetes Fechados, Escamoteáveis, Abertos e Esportivos"
+  },
+  {
+    "id": "acessorios",
+    "name": "Acessórios para Moto",
+    "icon": "Settings",
+    "description": "Baús Givi, protetores Scam, eletrônicos, carregadores e suportes"
+  },
+  {
+    "id": "pecas",
+    "name": "Peças para Moto",
+    "icon": "Activity",
+    "description": "Óleos Motul, kit relação, velas Iridium, freios e motor"
+  },
+  {
+    "id": "pneus",
+    "name": "Pneus",
+    "icon": "Disc",
+    "description": "Pneus Michelin, Pirelli, Metzeler para Hornet, CG, PCX e Big Trail"
+  },
+  {
+    "id": "vestuarios",
+    "name": "Vestuário & Equipamentos",
+    "icon": "Shirt",
+    "description": "Jaquetas de Cordura e Couro, luvas térmicas, botas e capas"
+  }
+]
