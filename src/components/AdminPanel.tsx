@@ -1,14 +1,17 @@
+// 
 import React, { useState, useEffect } from 'react';
-import { Product, Category } from '../types';
-import { X, RefreshCw, Database, CloudLightning, ShieldAlert, ArrowUpRight, ArrowDownRight, Edit2, Trash2, Plus, ArrowDownToLine, Check, Copy } from 'lucide-react';
+import { Product, Category, Banner } from '../types';
+import { X, RefreshCw, Database, CloudLightning, ShieldAlert, ArrowUpRight, ArrowDownRight, Edit2, Trash2, Plus, ArrowDownToLine, Check, Copy, Lock, KeyRound } from 'lucide-react';
 
 interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
   products: Product[];
   categories: Category[];
+  banners: Banner[];
   onProductsUpdate: (newProducts: Product[]) => void;
   onCategoriesUpdate: (newCategories: Category[]) => void;
+  onBannersUpdate: (newBanners: Banner[]) => void;
 }
 
 interface SupabaseStatus {
@@ -19,18 +22,55 @@ interface SupabaseStatus {
   tables: { products: boolean; categories: boolean };
 }
 
+const safeSetBanners = (updated: Banner[]) => {
+  try {
+    localStorage.setItem("kimotos_banners", JSON.stringify(updated));
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      alert("Erro ao salvar banner: A imagem é muito grande para ser salva no armazenamento local. Por favor, tente usar uma imagem com tamanho menor ou limpe o armazenamento do navegador.");
+    } else {
+      console.error("Error saving banners to localStorage:", error);
+    }
+  }
+};
+
 export default function AdminPanel({
   isOpen,
   onClose,
   products,
   categories,
+  banners,
   onProductsUpdate,
-  onCategoriesUpdate
+  onCategoriesUpdate,
+  onBannersUpdate
 }: AdminPanelProps) {
   if (!isOpen) return null;
 
-  const [activeTab, setActiveTab] = useState<'status' | 'prod' | 'cat'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'prod' | 'cat' | 'banner'>('status');
   
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPasswordInput('');
+      setPasswordError(false);
+    }
+  }, [isOpen]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+    if (passwordInput === adminPassword) {
+      setIsAuthenticated(true);
+      setPasswordError(false);
+    } else {
+      setPasswordError(true);
+    }
+  };
+
   // Status State
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [supabaseStatus, setSupabaseStatus] = useState<SupabaseStatus>({
@@ -370,7 +410,43 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
           </button>
         </div>
 
-        {/* Dashboard directory tabs */}
+        {!isAuthenticated ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50">
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 max-w-sm w-full text-center space-y-6">
+              <div className="bg-slate-100 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto">
+                <Lock className="w-8 h-8 text-slate-700" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">Acesso Restrito</h3>
+                <p className="text-xs text-gray-500 font-medium mt-1">Informe a senha para acessar a área do lojista.</p>
+              </div>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="password"
+                    placeholder="Senha de acesso"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all font-medium text-slate-800"
+                    autoFocus
+                  />
+                </div>
+                {passwordError && (
+                  <p className="text-red-500 text-xs font-bold">Senha incorreta. Tente novamente.</p>
+                )}
+                <button
+                  type="submit"
+                  className="w-full bg-slate-900 hover:bg-red-600 text-white font-black uppercase tracking-wider text-xs py-3 rounded-lg transition-colors cursor-pointer"
+                >
+                  Entrar
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Dashboard directory tabs */}
         <div className="bg-slate-950 text-white py-1.5 px-4 flex border-b border-slate-800 text-[10px] font-black uppercase tracking-widest space-x-4">
           <button
             onClick={() => { setActiveTab('status'); setShowProductForm(false); setShowCategoryForm(false); }}
@@ -395,6 +471,14 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
             }`}
           >
             Categorias ({categories.length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('banner'); setShowProductForm(false); setShowCategoryForm(false); }}
+            className={`pb-1 border-b-2 hover:text-white transition-all cursor-pointer ${
+              activeTab === 'banner' ? 'border-red-500 text-white' : 'border-transparent text-gray-500'
+            }`}
+          >
+            Banners Promocionais
           </button>
         </div>
 
@@ -901,6 +985,161 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
 
         </div>
 
+          </>
+        )}
+        
+        {activeTab === 'banner' && isAuthenticated && (
+          <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">Banners Cadastrados ({banners.length})</span>
+              <button
+                onClick={() => {
+                  const newBanner = {
+                    id: `banner-${Date.now()}`,
+                    image: '',
+                    title: 'Novo Banner',
+                    active: true
+                  };
+                  const updated = [...banners, newBanner];
+                  onBannersUpdate(updated);
+                  safeSetBanners(updated);
+                }}
+                className="bg-slate-900 hover:bg-red-600 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" /> Adicionar
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {banners.map((banner, index) => (
+                <div key={banner.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative group flex flex-col gap-3">
+                  <button
+                    onClick={() => {
+                      const updated = banners.filter(b => b.id !== banner.id);
+                      onBannersUpdate(updated);
+                      safeSetBanners(updated);
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 hover:text-white"
+                    title="Excluir Banner"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  
+                  <div className="flex gap-2">
+                    <div className="w-1/3 aspect-[2/1] bg-slate-100 rounded border border-slate-200 overflow-hidden flex items-center justify-center">
+                      {banner.image ? (
+                        <img src={banner.image} alt="Banner" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-slate-400">Sem imagem</span>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                       <div className="flex flex-col">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase flex justify-between">
+                            URL da Imagem
+                            <label className="cursor-pointer text-red-600 hover:text-red-700">
+                              Fazer Upload
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const updated = [...banners];
+                                      updated[index] = { ...banner, image: reader.result as string };
+                                      onBannersUpdate(updated);
+                                      safeSetBanners(updated);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            </label>
+                          </label>
+                          <input
+                            type="text"
+                            value={banner.image}
+                            onChange={(e) => {
+                              const updated = [...banners];
+                              updated[index] = { ...banner, image: e.target.value };
+                              onBannersUpdate(updated);
+                              safeSetBanners(updated);
+                            }}
+                            className="border border-slate-300 rounded px-2 py-1 text-xs w-full focus:ring-1 focus:ring-red-500 outline-none"
+                            placeholder="https://exemplo.com/imagem.jpg"
+                          />
+                       </div>
+                       <div className="flex flex-col">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase">Título (Opcional)</label>
+                          <input
+                            type="text"
+                            value={banner.title || ''}
+                            onChange={(e) => {
+                              const updated = [...banners];
+                              updated[index] = { ...banner, title: e.target.value };
+                              onBannersUpdate(updated);
+                              safeSetBanners(updated);
+                            }}
+                            className="border border-slate-300 rounded px-2 py-1 text-xs w-full focus:ring-1 focus:ring-red-500 outline-none"
+                          />
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                     <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Botão CTA</label>
+                        <input
+                          type="text"
+                          value={banner.cta || ''}
+                          onChange={(e) => {
+                            const updated = [...banners];
+                            updated[index] = { ...banner, cta: e.target.value };
+                            onBannersUpdate(updated);
+                            safeSetBanners(updated);
+                          }}
+                          className="border border-slate-300 rounded px-2 py-1 text-xs w-full"
+                        />
+                     </div>
+                     <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Caption</label>
+                        <input
+                          type="text"
+                          value={banner.caption || ''}
+                          onChange={(e) => {
+                            const updated = [...banners];
+                            updated[index] = { ...banner, caption: e.target.value };
+                            onBannersUpdate(updated);
+                            safeSetBanners(updated);
+                          }}
+                          className="border border-slate-300 rounded px-2 py-1 text-xs w-full"
+                        />
+                     </div>
+                  </div>
+                  
+                  <label className="flex items-center gap-2 cursor-pointer mt-1">
+                    <input
+                      type="checkbox"
+                      checked={banner.active}
+                      onChange={(e) => {
+                        const updated = [...banners];
+                        updated[index] = { ...banner, active: e.target.checked };
+                        onBannersUpdate(updated);
+                        safeSetBanners(updated);
+                      }}
+                      className="rounded text-red-600 focus:ring-red-500"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Ativo</span>
+                  </label>
+
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

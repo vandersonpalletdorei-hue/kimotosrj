@@ -1,3 +1,13 @@
+export interface Banner {
+  id: string;
+  image: string;
+  title?: string;
+  subtitle?: string;
+  caption?: string;
+  cta?: string;
+  active: boolean;
+}
+
 export interface Category {
   id: string;
   name: string;

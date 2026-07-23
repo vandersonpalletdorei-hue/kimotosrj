@@ -1,0 +1,93 @@
+--- src/components/AdminPanel.tsx
++++ src/components/AdminPanel.tsx
+@@ -21,6 +21,17 @@
+   tables: { products: boolean; categories: boolean };
+ }
+ 
++const safeSetBanners = (updated: Banner[]) => {
++  try {
++    localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++  } catch (error) {
++    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
++      alert("Erro ao salvar banner: A imagem é muito grande para ser salva no armazenamento local. Por favor, tente usar uma imagem com tamanho menor ou limpe o armazenamento do navegador.");
++    } else {
++      console.error("Error saving banners to localStorage:", error);
++    }
++  }
++};
++
+ export default function AdminPanel({
+   isOpen,
+   onClose,
+@@ -987,7 +998,7 @@
+                   };
+                   const updated = [...banners, newBanner];
+                   onBannersUpdate(updated);
+-                  localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                  safeSetBanners(updated);
+                 }}
+                 className="bg-slate-900 hover:bg-red-600 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all"
+               >
+@@ -1002,7 +1013,7 @@
+                     onClick={() => {
+                       const updated = banners.filter(b => b.id !== banner.id);
+                       onBannersUpdate(updated);
+-                      localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                      safeSetBanners(updated);
+                     }}
+                     className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 hover:text-white"
+                     title="Excluir Banner"
+@@ -1036,7 +1047,7 @@
+                                       const updated = [...banners];
+                                       updated[index] = { ...banner, image: reader.result as string };
+                                       onBannersUpdate(updated);
+-                                      localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                                      safeSetBanners(updated);
+                                     };
+                                     reader.readAsDataURL(file);
+                                   }
+@@ -1051,7 +1062,7 @@
+                               const updated = [...banners];
+                               updated[index] = { ...banner, image: e.target.value };
+                               onBannersUpdate(updated);
+-                              localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                              safeSetBanners(updated);
+                             }}
+                             className="border border-slate-300 rounded px-2 py-1 text-xs w-full focus:ring-1 focus:ring-red-500 outline-none"
+                             placeholder="https://exemplo.com/imagem.jpg"
+@@ -1066,7 +1077,7 @@
+                               const updated = [...banners];
+                               updated[index] = { ...banner, title: e.target.value };
+                               onBannersUpdate(updated);
+-                              localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                              safeSetBanners(updated);
+                             }}
+                             className="border border-slate-300 rounded px-2 py-1 text-xs w-full focus:ring-1 focus:ring-red-500 outline-none"
+                           />
+@@ -1084,7 +1095,7 @@
+                             const updated = [...banners];
+                             updated[index] = { ...banner, cta: e.target.value };
+                             onBannersUpdate(updated);
+-                            localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                            safeSetBanners(updated);
+                           }}
+                           className="border border-slate-300 rounded px-2 py-1 text-xs w-full"
+                         />
+@@ -1098,7 +1109,7 @@
+                             const updated = [...banners];
+                             updated[index] = { ...banner, caption: e.target.value };
+                             onBannersUpdate(updated);
+-                            localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                            safeSetBanners(updated);
+                           }}
+                           className="border border-slate-300 rounded px-2 py-1 text-xs w-full"
+                         />
+@@ -1113,7 +1124,7 @@
+                         const updated = [...banners];
+                         updated[index] = { ...banner, active: e.target.checked };
+                         onBannersUpdate(updated);
+-                        localStorage.setItem("kimotos_banners", JSON.stringify(updated));
++                        safeSetBanners(updated);
+                       }}
+                       className="rounded text-red-600 focus:ring-red-500"
+                     />

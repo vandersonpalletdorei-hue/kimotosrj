@@ -1,5 +1,6 @@
+// 
 import React, { useState, useEffect } from "react";
-import { Product, Category, CartItem } from "./types";
+import { Product, Category, CartItem, Banner } from "./types";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
 import ProductCard from "./components/ProductCard";
@@ -13,6 +14,7 @@ import * as LucideIcons from "lucide-react";
 
 import INITIAL_PRODUCTS from "./products_db.json";
 import INITIAL_CATEGORIES from "./categories_db.json";
+import INITIAL_BANNERS from "./banners_db.json";
 
 // Dynamic Icon Renderer for database-stored icons names
 const DynamicIcon = ({
@@ -29,6 +31,7 @@ const DynamicIcon = ({
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter States
@@ -69,13 +72,16 @@ export default function App() {
     setLoading(true);
     let loadedProducts = INITIAL_PRODUCTS as Product[];
     let loadedCategories = INITIAL_CATEGORIES as Category[];
+    let loadedBanners = INITIAL_BANNERS as Banner[];
 
     // 1. Check local storage first (for customized state in client)
     try {
       const savedProducts = localStorage.getItem("kimotos_products");
       const savedCategories = localStorage.getItem("kimotos_categories");
+      const savedBanners = localStorage.getItem("kimotos_banners");
       if (savedProducts) loadedProducts = JSON.parse(savedProducts);
       if (savedCategories) loadedCategories = JSON.parse(savedCategories);
+      if (savedBanners) loadedBanners = JSON.parse(savedBanners);
     } catch (e) {
       console.warn("Failed to load from localStorage", e);
     }
@@ -108,6 +114,7 @@ export default function App() {
 
     setProducts(loadedProducts);
     setCategories(loadedCategories);
+    setBanners(loadedBanners);
 
     // Dynamic pricing filter adjustment based on current products catalog
     if (loadedProducts.length > 0) {
@@ -254,7 +261,7 @@ export default function App() {
       />
 
       {/* 2. Promo Slider Carousel (hide when active filters exist to declutter visual space) */}
-      {!searchQuery && !selectedCategory && <HeroSection />}
+      {!searchQuery && !selectedCategory && <HeroSection banners={banners} />}
 
       {/* 3. Main Catalog Section */}
       <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
@@ -424,8 +431,10 @@ export default function App() {
         onClose={() => setIsAdminOpen(false)}
         products={products}
         categories={categories}
+        banners={banners}
         onProductsUpdate={setProducts}
         onCategoriesUpdate={setCategories}
+        onBannersUpdate={setBanners}
       />
 
       {/* 10. Floating WhatsApp Support Button */}
