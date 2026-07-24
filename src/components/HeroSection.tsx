@@ -13,7 +13,13 @@ export default function HeroSection({ banners }: HeroSectionProps) {
   const activeBanners = banners.filter(b => b.active);
 
   useEffect(() => {
-    if (activeBanners.length === 0) return;
+    if (currentSlide >= activeBanners.length) {
+      setCurrentSlide(0);
+    }
+  }, [activeBanners.length, currentSlide]);
+
+  useEffect(() => {
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
     }, 6000);
@@ -51,8 +57,9 @@ export default function HeroSection({ banners }: HeroSectionProps) {
         >
           {/* As imagens dos banners originais já possuem texto, então removemos a camada de texto do código */}
           <img
-            src={slide.image && slide.image.startsWith('http') ? slide.image : DEFAULT_BANNERS[index % DEFAULT_BANNERS.length]}
+            src={slide.image && slide.image.length > 5 ? slide.image : DEFAULT_BANNERS[index % DEFAULT_BANNERS.length]}
             alt={slide.title}
+
             className="w-full h-full object-cover aspect-[4/3] md:aspect-[2/1] lg:aspect-[2.5/1] cursor-pointer"
             onError={(e) => {
               (e.target as HTMLImageElement).src = DEFAULT_BANNERS[index % DEFAULT_BANNERS.length];

@@ -90,9 +90,13 @@ export default function App() {
     try {
       const pRes = await fetch("/api/products");
       const cRes = await fetch("/api/categories");
+      const bRes = await fetch("/api/banners");
+      
       if (pRes.ok && cRes.ok) {
         const pData = await pRes.json();
         const cData = await cRes.json();
+        const bData = bRes.ok ? await bRes.json() : null;
+        
         if (pData.products && pData.products.length > 0) {
           loadedProducts = pData.products;
           localStorage.setItem(
@@ -105,6 +109,13 @@ export default function App() {
           localStorage.setItem(
             "kimotos_categories",
             JSON.stringify(cData.categories),
+          );
+        }
+        if (bData && bData.banners && bData.banners.length > 0) {
+          loadedBanners = bData.banners;
+          localStorage.setItem(
+            "kimotos_banners",
+            JSON.stringify(bData.banners),
           );
         }
       }
@@ -399,8 +410,10 @@ export default function App() {
         cartItems={cart}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
-        onCheckout={handleCheckoutMP}
-        isCheckingOut={isCheckingOut}
+        onCheckout={(shippingCost, shippingName) => {
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+        }}
       />
 
       {/* 6. Checkout Step process overlay */}

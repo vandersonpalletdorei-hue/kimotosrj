@@ -1,0 +1,37 @@
+          {activeTab === 'banner' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">Banners Cadastrados ({banners.length})</span>
+                <div className="flex items-center gap-3">
+                  {bannerMessage && (
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded ${bannerMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      {bannerMessage.text}
+                    </span>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveBanners}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Salvar Alterações
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newBanner = {
+                          id: `banner-${Date.now()}`,
+                          image: '',
+                          title: 'Novo Banner',
+                          active: true
+                        };
+                        const updated = [...banners, newBanner];
+                        onBannersUpdate(updated);
+                        safeSetBanners(updated);
+                      }}
+                      className="bg-slate-900 hover:bg-red-600 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Adicionar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

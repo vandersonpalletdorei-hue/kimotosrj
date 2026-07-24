@@ -78,10 +78,6 @@ export default function CheckoutModal({
     setStep('success');
   };
 
-  const handleFinishSuccess = () => {
-    onClearCart();
-    onClose();
-  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
@@ -438,13 +434,18 @@ export default function CheckoutModal({
               </div>
 
               <div className="pt-4">
-                <button
-                  type="button"
-                  onClick={handleFinishSuccess}
-                  className="w-full bg-slate-900 hover:bg-red-600 text-white font-black uppercase tracking-widest text-xs py-3 px-4 rounded-lg cursor-pointer transition-all"
+                <a
+                  href={`https://wa.me/5524998359972?text=${encodeURIComponent(`*NOVO PEDIDO* 🏍️\n\n*DADOS DO CLIENTE:*\nNome: ${address.name}\nTelefone: ${address.phone}\n\n*ENDEREÇO DE ENTREGA:*\n${address.street}, ${address.number}\nBairro: ${address.neighborhood}\nCEP: ${address.cep}\nCidade/UF: ${address.city}-${address.state}\n\n*ITENS DO PEDIDO:*\n${cartItems.map(item => `- ${item.quantity}x ${item.product.name} (R$ ${item.product.price.toFixed(2)})`).join('\n')}\n\n*TOTAL: R$ ${total.toFixed(2)}*\n*PAGAMENTO:* ${paymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito'}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    onClearCart();
+                    onClose();
+                  }}
+                  className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black uppercase tracking-widest text-xs py-3 px-4 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-2 text-center inline-block"
                 >
-                  Continuar Navegando
-                </button>
+                  Enviar Pedido p/ WhatsApp
+                </a>
               </div>
             </div>
           )}

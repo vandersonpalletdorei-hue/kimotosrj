@@ -18,6 +18,7 @@ app.use(express.json({ limit: '50mb' }));
 // Database file paths
 const PRODUCTS_FILE = path.join(process.cwd(), 'src', 'products_db.json');
 const CATEGORIES_FILE = path.join(process.cwd(), 'src', 'categories_db.json');
+const BANNERS_FILE = path.join(process.cwd(), 'src', 'banners_db.json');
 
 // --- Supabase Config & Auto-Resolution ---
 let supabaseUrl = process.env.SUPABASE_URL || '';
@@ -93,6 +94,30 @@ function writeLocalCategories(categories: any[]) {
     return true;
   } catch (err) {
     console.error('Error writing local categories:</chemicals>', err);
+    return false;
+  }
+}
+
+function readLocalBanners() {
+  try {
+    if (fs.existsSync(BANNERS_FILE)) {
+      const raw = fs.readFileSync(BANNERS_FILE, 'utf8');
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error('Error reading local banners file:', err);
+  }
+  return [];
+}
+
+function writeLocalBanners(banners: any[]) {
+  try {
+    const dir = path.dirname(BANNERS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(BANNERS_FILE, JSON.stringify(banners, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Error writing local banners file:', err);
     return false;
   }
 }
@@ -242,6 +267,22 @@ app.post('/api/categories', async (req, res) => {
 
   return res.json({ success: true, message: 'Saved locally.' });
 });
+
+// --- API Endpoints: Banners ---
+app.get('/api/banners', (req, res) => {
+  res.json({ banners: readLocalBanners(), source: 'local' });
+});
+
+app.post('/api/banners', (req, res) => {
+  const { banners } = req.body;
+  if (!Array.isArray(banners)) {
+    return res.status(400).json({ error: 'Body must contain a list of banners.' });
+  }
+
+  writeLocalBanners(banners);
+  return res.json({ success: true });
+});
+
 
 // --- API Endpoints: Supabase Status & Sychronizations ---
 app.get('/api/supabase/status', async (req, res) => {

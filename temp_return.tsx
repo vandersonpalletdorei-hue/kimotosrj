@@ -1,413 +1,3 @@
-// 
-import React, { useState, useEffect } from 'react';
-import { Product, Category, Banner } from '../types';
-import { X, RefreshCw, Database, CloudLightning, ShieldAlert, ArrowUpRight, ArrowDownRight, Edit2, Trash2, Plus, ArrowDownToLine, Check, Copy, Lock, KeyRound } from 'lucide-react';
-
-interface AdminPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-  products: Product[];
-  categories: Category[];
-  banners: Banner[];
-  onProductsUpdate: (newProducts: Product[]) => void;
-  onCategoriesUpdate: (newCategories: Category[]) => void;
-  onBannersUpdate: (newBanners: Banner[]) => void;
-}
-
-interface SupabaseStatus {
-  configured: boolean;
-  connected: boolean;
-  url: string | null;
-  error: string | null;
-  tables: { products: boolean; categories: boolean };
-}
-
-const safeSetBanners = (updated: Banner[]) => {
-  try {
-    localStorage.setItem("kimotos_banners", JSON.stringify(updated));
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      alert("Erro ao salvar banner: A imagem é muito grande para ser salva no armazenamento local. Por favor, tente usar uma imagem com tamanho menor ou limpe o armazenamento do navegador.");
-    } else {
-      console.error("Error saving banners to localStorage:", error);
-    }
-  }
-};
-
-export default function AdminPanel({
-  isOpen,
-  onClose,
-  products,
-  categories,
-  banners,
-  onProductsUpdate,
-  onCategoriesUpdate,
-  onBannersUpdate
-}: AdminPanelProps) {
-  if (!isOpen) return null;
-
-  const [activeTab, setActiveTab] = useState<'status' | 'prod' | 'cat' | 'banner'>('status');
-  
-  // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setPasswordInput('');
-      setPasswordError(false);
-    }
-  }, [isOpen]);
-
-  const [bannerMessage, setBannerMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
-
-  const handleSaveBanners = async () => {
-    try {
-      safeSetBanners(banners);
-      const res = await fetch('/api/banners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ banners })
-      });
-      if (res.ok) {
-        setBannerMessage({ type: 'success', text: 'Banners salvos com sucesso!' });
-      } else {
-        setBannerMessage({ type: 'error', text: 'Erro ao salvar banners!' });
-      }
-    } catch (error) {
-      console.error('Erro ao salvar banners:', error);
-      setBannerMessage({ type: 'error', text: 'Erro ao salvar banners!' });
-    }
-    setTimeout(() => setBannerMessage(null), 3000);
-  };
-
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
-    if (passwordInput === adminPassword) {
-      setIsAuthenticated(true);
-      setPasswordError(false);
-    } else {
-      setPasswordError(true);
-    }
-  };
-
-  // Status State
-  const [loadingStatus, setLoadingStatus] = useState(false);
-  const [supabaseStatus, setSupabaseStatus] = useState<SupabaseStatus>({
-    configured: false,
-    connected: false,
-    url: null,
-    error: null,
-    tables: { products: false, categories: false }
-  });
-
-  const [copiedSql, setCopiedSql] = useState(false);
-  const [syncing, setSyncing] = useState<'push' | 'pull' | null>(null);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
-
-  // Form states for Products CRUD
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [itemForm, setItemForm] = useState<Partial<Product>>({});
-  const [showProductForm, setShowProductForm] = useState(false);
-
-  // Form states for Categories CRUD
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [catForm, setCatForm] = useState<Partial<Category>>({});
-  const [showCategoryForm, setShowCategoryForm] = useState(false);
-
-  // Fetch Supabase configuration status from Express Server
-  const fetchSupabaseStatus = async () => {
-    setLoadingStatus(true);
-    try {
-      const res = await fetch('/api/supabase/status');
-      if (res.ok) {
-        const data = await res.json();
-        setSupabaseStatus(data);
-      }
-    } catch (err: any) {
-      console.error('Error fetching Supabase status:', err);
-    } finally {
-      setLoadingStatus(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSupabaseStatus();
-  }, []);
-
-  // Trigger server Push (local to cloud)
-  const handlePushToCloud = async () => {
-    setSyncing('push');
-    setSyncMessage(null);
-    try {
-      const res = await fetch('/api/supabase/push', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        setSyncMessage('Sucesso: Todos os dados locais foram exportados para o seu Supabase cloud!');
-        fetchSupabaseStatus();
-      } else {
-        setSyncMessage(`Erro ao empurrar: ${data.error || 'Erro desconhecido'}`);
-      }
-    } catch (err: any) {
-      setSyncMessage(`Erro na requisição: ${err.message}`);
-    } finally {
-      setSyncing(null);
-    }
-  };
-
-  // Trigger server Pull (cloud to local)
-  const handlePullFromCloud = async () => {
-    setSyncing('pull');
-    setSyncMessage(null);
-    try {
-      const res = await fetch('/api/supabase/pull', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        setSyncMessage(`Sucesso: Puxado da nuvem! Sincronizado ${data.productsCount} produtos e ${data.categoriesCount} categorias.`);
-        
-        // Reload local React state by fetching products and categories again from server
-        const prodRes = await fetch('/api/products');
-        const catRes = await fetch('/api/categories');
-        if (prodRes.ok && catRes.ok) {
-          const prodData = await prodRes.json();
-          const catData = await catRes.json();
-          onProductsUpdate(prodData.products);
-          onCategoriesUpdate(catData.categories);
-        }
-        fetchSupabaseStatus();
-      } else {
-        setSyncMessage(`Erro ao puxar: ${data.error || 'Erro desconhecido'}`);
-      }
-    } catch (err: any) {
-      setSyncMessage(`Erro na requisição: ${err.message}`);
-    } finally {
-      setSyncing(null);
-    }
-  };
-
-  // SQL Copy trigger
-  const sqlCode = `-- 1. CRIAR TABELA DE CATEGORIAS
-create table if not exists public.categories (
-  id text primary key,
-  name text not null,
-  icon text default 'Shield',
-  description text
-);
-
--- Ativar segurança e acesso público total para testes rápidos
-alter table public.categories enable row level security;
-create policy "Acesso público irrestrita" on public.categories for select using (true);
-create policy "Escrita irrestrita" on public.categories for all using (true) with check (true);
-
--- 2. CRIAR TABELA DE PRODUTOS (CONECTADA POR REFERENCES)
-create table if not exists public.products (
-  id text primary key,
-  name text not null,
-  category text not null references public.categories(id) on delete cascade,
-  categoryLabel text,
-  brand text,
-  price numeric not null,
-  originalPrice numeric,
-  image text,
-  images jsonb,
-  description text,
-  rating numeric default 5.0,
-  reviewsCount integer default 0,
-  isPromo boolean default false,
-  isNew boolean default false,
-  freeShipping boolean default false,
-  sizes jsonb,
-  stock integer default 0,
-  subcategory text,
-  attributes jsonb
-);
-
-alter table public.products enable row level security;
-create policy "Acesso público irrestrita" on public.products for select using (true);
-create policy "Escrita irrestrita" on public.products for all using (true) with check (true);
-`;
-
-  const copySqlToClipboard = () => {
-    navigator.clipboard.writeText(sqlCode);
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2000);
-  };
-
-  // Products CRUD handlings
-  const handleOpenProductForm = (p: Product | null) => {
-    if (p) {
-      setEditingProduct(p);
-      setItemForm({ ...p });
-    } else {
-      setEditingProduct(null);
-      setItemForm({
-        id: `prod-${Math.floor(1000 + Math.random() * 9000)}`,
-        name: '',
-        brand: '',
-        price: 0,
-        originalPrice: undefined,
-        category: categories[0]?.id || '',
-        categoryLabel: categories[0]?.name || '',
-        image: 'https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&q=80&w=600',
-        description: '',
-        rating: 5.0,
-        reviewsCount: 0,
-        stock: 10,
-        subcategory: '',
-        isNew: true,
-        isPromo: false,
-        freeShipping: false,
-        sizes: ['56', '58', '60']
-      });
-    }
-    setShowProductForm(true);
-  };
-
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!itemForm.name || !itemForm.price || !itemForm.category || !itemForm.image) {
-      alert('Por favor, preencha nome, preço, categoria e adicione ao menos uma imagem!');
-      return;
-    }
-
-    const currentCat = categories.find(c => c.id === itemForm.category);
-
-    const updatedForm = {
-      ...itemForm,
-      categoryLabel: currentCat ? currentCat.name : itemForm.category
-    } as Product;
-
-    let updatedProducts: Product[] = [];
-    if (editingProduct) {
-      updatedProducts = products.map(p => p.id === editingProduct.id ? updatedForm : p);
-    } else {
-      updatedProducts = [updatedForm, ...products];
-    }
-
-    // Persist locally in localStorage first for static/offline-first support on Netlify
-    try {
-      localStorage.setItem('kimotos_products', JSON.stringify(updatedProducts));
-    } catch (err) {
-      console.warn('Failed to save products to localStorage:', err);
-    }
-    onProductsUpdate(updatedProducts);
-    setShowProductForm(false);
-
-    // Try server sync
-    try {
-      await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: updatedProducts })
-      });
-      fetchSupabaseStatus();
-    } catch (err: any) {
-      console.log('Skipping backend sync on product save (running in static offline mode):', err.message);
-    }
-  };
-
-  const handleProductDelete = async (id: string) => {
-    if (!confirm('Deseja realmente deletar esta motopeça?')) return;
-    const updated = products.filter(p => p.id !== id);
-
-    // Persist locally in localStorage first for static/offline-first support on Netlify
-    try {
-      localStorage.setItem('kimotos_products', JSON.stringify(updated));
-    } catch (err) {
-      console.warn('Failed to delete product from localStorage:', err);
-    }
-    onProductsUpdate(updated);
-
-    // Try server sync
-    try {
-      await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: updated })
-      });
-      fetchSupabaseStatus();
-    } catch (err: any) {
-      console.log('Skipping backend sync on product delete (running in static offline mode):', err.message);
-    }
-  };
-
-  // Categories CRUD handlings
-  const handleOpenCatForm = (c: Category | null) => {
-    if (c) {
-      setEditingCategory(c);
-      setCatForm({ ...c });
-    } else {
-      setEditingCategory(null);
-      setCatForm({
-        id: `cat-${Math.floor(10 + Math.random() * 90)}`,
-        name: '',
-        icon: 'Shield',
-        description: ''
-      });
-    }
-    setShowCategoryForm(true);
-  };
-
-  const handleCategorySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!catForm.id || !catForm.name) {
-      alert('Preencha o identificador único e o nome!');
-      return;
-    }
-
-    const item = catForm as Category;
-    let updated: Category[] = [];
-    if (editingCategory) {
-      updated = categories.map(c => c.id === editingCategory.id ? item : c);
-    } else {
-      updated = [...categories, item];
-    }
-
-    // Persist locally in localStorage first for static/offline-first support on Netlify
-    try {
-      localStorage.setItem('kimotos_categories', JSON.stringify(updated));
-    } catch (err) {
-      console.warn('Failed to save categories to localStorage:', err);
-    }
-    onCategoriesUpdate(updated);
-    setShowCategoryForm(false);
-
-    // Try server sync
-    try {
-      await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categories: updated })
-      });
-      fetchSupabaseStatus();
-    } catch (err: any) {
-      console.log('Skipping backend sync on category save (running in static offline mode):', err.message);
-    }
-  };
-
-  const handleCategoryDelete = async (id: string) => {
-    if (!confirm('Deseja realmente deletar esta categoria? Todos os produtos vinculados poderão ser afetados no Supabase.')) return;
-    const updated = categories.filter(c => c.id !== id);
-
-    // Persist locally in localStorage first for static/offline-first support on Netlify
-    try {
-      localStorage.setItem('kimotos_categories', JSON.stringify(updated));
-    } catch (err) {
-      console.warn('Failed to delete category from localStorage:', err);
-    }
-    onCategoriesUpdate(updated);
-
-    // Try server sync
-    try {
-      await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categories: updated })
-      });
-      fetchSupabaseStatus();
     } catch (err: any) {
       console.log('Skipping backend sync on category delete (running in static offline mode):', err.message);
     }
@@ -827,67 +417,35 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-600 uppercase mb-2">Imagens do Produto (Até 5) *</label>
-                <div className="flex flex-wrap gap-3">
-                  {Array.from({ length: 5 }).map((_, idx) => {
-                    const imagesArr = itemForm.images || (itemForm.image ? [itemForm.image] : []);
-                    const currentImage = imagesArr[idx];
-                    return (
-                      <div key={idx} className="relative w-24 h-24 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden group">
-                        {currentImage ? (
-                          <>
-                            <img src={currentImage} alt={`Img ${idx + 1}`} className="w-full h-full object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newImages = [...imagesArr];
-                                newImages.splice(idx, 1);
-                                setItemForm({
-                                  ...itemForm,
-                                  images: newImages,
-                                  image: newImages.length > 0 ? newImages[0] : ''
-                                });
-                              }}
-                              className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Trash2 className="w-6 h-6 text-white" />
-                            </button>
-                          </>
-                        ) : (
-                          <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
-                            <Plus className="w-8 h-8" />
-                            <span className="text-[9px] font-bold mt-1 uppercase">Adicionar</span>
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    const base64 = reader.result as string;
-                                    const currentImages = [...imagesArr];
-                                    currentImages[idx] = base64;
-                                    const filtered = currentImages.filter(Boolean);
-                                    setItemForm({
-                                      ...itemForm,
-                                      images: filtered,
-                                      image: filtered.length > 0 ? filtered[0] : ''
-                                    });
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
-                              }}
-                            />
-                          </label>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <label className="flex justify-between items-center block text-[10px] font-extrabold text-slate-600 uppercase mb-1">
+                  <span>Imagem Principal (URL) *</span>
+                  <label className="cursor-pointer text-red-600 hover:text-red-700 flex items-center gap-1 font-bold">
+                    <ArrowUpRight className="w-3 h-3" /> Upload
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setItemForm({ ...itemForm, image: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={itemForm.image}
+                  onChange={e => setItemForm({ ...itemForm, image: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg text-xs font-semibold"
+                />
               </div>
-
 
               <div>
                 <label className="block text-[10px] font-extrabold text-slate-600 uppercase mb-1">Descrição Explicativa *</label>
@@ -1058,10 +616,14 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
               </div>
             </form>
           )}
+
           {activeTab === 'banner' && (
             <div className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between">
                 <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">Banners Cadastrados ({banners.length})</span>
+                <div className="flex items-center gap-3">
+                  {bannerMessage && (
+
                 <div className="flex items-center gap-3">
                   {bannerMessage && (
                     <span className={`text-[10px] font-bold px-2 py-1 rounded ${bannerMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
@@ -1094,8 +656,8 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               {banners.map((banner, index) => (
 
@@ -1224,8 +786,9 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
                 </div>
               ))}
             </div>
-          </div>
+            </div>
           )}
+
         </div>
         </>
         )}

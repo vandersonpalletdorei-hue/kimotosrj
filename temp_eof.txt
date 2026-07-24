@@ -1,0 +1,25 @@
+                    <input
+                      type="checkbox"
+                      checked={banner.active}
+                      onChange={(e) => {
+                        const updated = [...banners];
+                        updated[index] = { ...banner, active: e.target.checked };
+                        onBannersUpdate(updated);
+                        safeSetBanners(updated);
+                      }}
+                      className="rounded text-red-600 focus:ring-red-500"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Ativo</span>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
+        </div>
+        </>
+        )}
+      </div>
+    </div>
+  );
+}

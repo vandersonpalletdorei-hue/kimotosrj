@@ -1,0 +1,3 @@
+          <img
+            src={slide.image && slide.image.length > 5 ? slide.image : DEFAULT_BANNERS[index % DEFAULT_BANNERS.length]}
+            alt={slide.title}

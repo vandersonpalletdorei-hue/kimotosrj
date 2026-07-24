@@ -1,0 +1,7 @@
+  useEffect(() => {
+    if (currentSlide >= activeBanners.length) {
+      setCurrentSlide(0);
+    }
+  }, [activeBanners.length, currentSlide]);
+
+  useEffect(() => {

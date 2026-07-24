@@ -1,0 +1,8 @@
+  const handleProductSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!itemForm.name || !itemForm.price || !itemForm.category || !itemForm.image) {
+      alert('Por favor, preencha nome, preço, categoria e adicione ao menos uma imagem!');
+      return;
+    }
+
+    const currentCat = categories.find(c => c.id === itemForm.category);

@@ -1,0 +1,14 @@
+                    <span className="text-xs font-bold text-slate-700">Ativo</span>
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+        </>
+        )}
+      </div>
+    </div>
+  );
+}

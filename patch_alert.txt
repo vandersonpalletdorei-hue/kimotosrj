@@ -1,0 +1,21 @@
+  const [bannerMessage, setBannerMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
+
+  const handleSaveBanners = async () => {
+    try {
+      safeSetBanners(banners);
+      const res = await fetch('/api/banners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ banners })
+      });
+      if (res.ok) {
+        setBannerMessage({ type: 'success', text: 'Banners salvos com sucesso!' });
+      } else {
+        setBannerMessage({ type: 'error', text: 'Erro ao salvar banners!' });
+      }
+    } catch (error) {
+      console.error('Erro ao salvar banners:', error);
+      setBannerMessage({ type: 'error', text: 'Erro ao salvar banners!' });
+    }
+    setTimeout(() => setBannerMessage(null), 3000);
+  };
