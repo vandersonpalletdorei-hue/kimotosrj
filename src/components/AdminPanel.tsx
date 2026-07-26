@@ -1,5 +1,5 @@
 // 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Product, Category, Banner } from '../types';
 import { X, RefreshCw, Database, CloudLightning, ShieldAlert, ArrowUpRight, ArrowDownRight, Edit2, Trash2, Plus, ArrowDownToLine, Check, Copy, Lock, KeyRound } from 'lucide-react';
 
@@ -188,49 +188,50 @@ export default function AdminPanel({
     }
   };
 
-  // SQL Copy trigger
   const sqlCode = `-- 1. CRIAR TABELA DE CATEGORIAS
-create table if not exists public.categories (
+create table if not exists public.categorias (
   id text primary key,
-  name text not null,
-  icon text default 'Shield',
-  description text
+  nome text not null,
+  icone text default 'Shield',
+  descricao text
 );
 
 -- Ativar segurança e acesso público total para testes rápidos
-alter table public.categories enable row level security;
-create policy "Acesso público irrestrita" on public.categories for select using (true);
-create policy "Escrita irrestrita" on public.categories for all using (true) with check (true);
+alter table public.categorias enable row level security;
+create policy "Acesso público irrestrita" on public.categorias for select using (true);
+create policy "Escrita irrestrita" on public.categorias for all using (true) with check (true);
 
 -- 2. CRIAR TABELA DE PRODUTOS (CONECTADA POR REFERENCES)
-create table if not exists public.products (
+create table if not exists public.produtos (
   id text primary key,
-  name text not null,
-  category text not null references public.categories(id) on delete cascade,
-  categoryLabel text,
-  brand text,
-  price numeric not null,
-  originalPrice numeric,
-  image text,
-  images jsonb,
-  description text,
-  rating numeric default 5.0,
-  reviewsCount integer default 0,
-  isPromo boolean default false,
-  isNew boolean default false,
-  freeShipping boolean default false,
-  sizes jsonb,
-  stock integer default 0,
-  subcategory text,
-  attributes jsonb
+  codigo text,
+  nome text not null,
+  categoria text not null references public.categorias(id) on delete cascade,
+  categoria_label text,
+  marca text,
+  preco numeric not null,
+  preco_original numeric,
+  imagem text,
+  imagens jsonb,
+  descricao text,
+  avaliacao numeric default 5.0,
+  num_avaliacoes integer default 0,
+  em_promocao boolean default false,
+  novo boolean default false,
+  frete_gratis boolean default false,
+  tamanhos jsonb,
+  estoque integer default 0,
+  subcategoria text,
+  atributos jsonb
 );
 
-alter table public.products enable row level security;
-create policy "Acesso público irrestrita" on public.products for select using (true);
-create policy "Escrita irrestrita" on public.products for all using (true) with check (true);
-`;
+alter table public.produtos enable row level security;
+create policy "Acesso público irrestrita" on public.produtos for select using (true);
+create policy "Escrita irrestrita" on public.produtos for all using (true) with check (true);`;
 
   const copySqlToClipboard = () => {
+
+
     navigator.clipboard.writeText(sqlCode);
     setCopiedSql(true);
     setTimeout(() => setCopiedSql(false), 2000);
@@ -835,7 +836,7 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
                     return (
                       <div key={idx} className="relative w-24 h-24 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden group">
                         {currentImage ? (
-                          <>
+                          <div className="w-full h-full relative">
                             <img src={currentImage} alt={`Img ${idx + 1}`} className="w-full h-full object-cover" />
                             <button
                               type="button"
@@ -852,8 +853,9 @@ create policy "Escrita irrestrita" on public.products for all using (true) with 
                             >
                               <Trash2 className="w-6 h-6 text-white" />
                             </button>
-                          </>
+                          </div>
                         ) : (
+
                           <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                             <Plus className="w-8 h-8" />
                             <span className="text-[9px] font-bold mt-1 uppercase">Adicionar</span>

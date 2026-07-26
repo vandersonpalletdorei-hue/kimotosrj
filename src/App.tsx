@@ -1,5 +1,5 @@
 // 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Product, Category, CartItem, Banner } from "./types";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";

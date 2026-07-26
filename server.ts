@@ -175,7 +175,7 @@ app.post('/api/products', async (req, res) => {
   if (supabase) {
     try {
       // Map structures correctly for Portuguese table "produtos"
-      const mapped = products.map((p: any) => ({
+      let mapped = products.map((p: any) => ({
         id: p.id,
         codigo: p.id,
         nome: p.name,
@@ -183,6 +183,7 @@ app.post('/api/products', async (req, res) => {
         categoria_label: p.categoryLabel || p.category,
         marca: p.brand || '',
         preco: p.price,
+        preco_original: p.originalPrice || null,
         preco_original: p.originalPrice || null,
         imagem: p.image,
         imagens: p.images || null,
@@ -195,15 +196,22 @@ app.post('/api/products', async (req, res) => {
         tamanhos: p.sizes || null,
         estoque: p.stock || 0,
         subcategoria: p.subcategory || '',
-        atributos: p.attributes || null,
-        ativo: true
+        atributos: p.attributes || null
       }));
 
-      const { error } = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
-      if (error) {
-        console.error('[Supabase] Error saving products in real-time:', error.message);
-        return res.status(251).json({ success: true, message: 'Saved locally, but Supabase sync failed: ' + error.message });
+      let result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
+      
+      // Fallback if preco_original column does not exist
+      if (result.error && result.error.message.includes("preco_original")) {
+        console.warn("[Supabase] preco_original column missing, retrying without it");
+        mapped = mapped.map(({ preco_original, ...rest }) => rest);
+        result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
       }
+
+      if (result.error) {
+        console.error('[Supabase] Error saving products in real-time:', result.error.message);
+      }
+
       return res.json({ success: true, message: 'Saved and replicated to Supabase cloud successfully!' });
     } catch (err: any) {
       console.error('[Supabase] Exception replicating products:', err.message);
@@ -347,12 +355,9 @@ app.post('/api/supabase/push', async (req, res) => {
         descricao: c.description || ''
       }));
       const { error: catError } = await supabase.from('categorias').upsert(mappedCats, { onConflict: 'id' });
-      if (catError) throw new Error(`Category push failed: ${catError.message}`);
-    }
-
     // 2. Flush products
     if (localProducts.length > 0) {
-      const mappedProds = localProducts.map((p: any) => ({
+      let mappedProds = localProducts.map((p: any) => ({
         id: p.id,
         codigo: p.id,
         nome: p.name,
@@ -360,6 +365,7 @@ app.post('/api/supabase/push', async (req, res) => {
         categoria_label: p.categoryLabel || p.category,
         marca: p.brand || '',
         preco: p.price,
+        preco_original: p.originalPrice || null,
         preco_original: p.originalPrice || null,
         imagem: p.image,
         imagens: p.images || null,
@@ -375,12 +381,20 @@ app.post('/api/supabase/push', async (req, res) => {
         atributos: p.attributes || null,
         ativo: true
       }));
-      const { error: prodError } = await supabase.from('produtos').upsert(mappedProds, { onConflict: 'id' });
-      if (prodError) throw new Error(`Product push failed: ${prodError.message}`);
-    }
 
+      let result = await supabase.from('produtos').upsert(mappedProds, { onConflict: 'id' });
+      if (result.error && result.error.message.includes("preco_original")) {
+        console.warn("[Supabase] preco_original column missing, retrying without it during push");
+        mappedProds = mappedProds.map(({ preco_original, ...rest }) => rest);
+        result = await supabase.from('produtos').upsert(mappedProds, { onConflict: 'id' });
+      }
+
+      if (result.error) throw new Error(`Product push failed: ${result.error.message}`);
+    }
+    }
     return res.json({ success: true, message: 'All data pushed successfully!' });
   } catch (err: any) {
+
     console.error('[Supabase Push Error]', err.message);
     res.status(500).json({ error: err.message });
   }
