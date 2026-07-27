@@ -1,0 +1,16 @@
+    const localBanners = readLocalBanners();
+    if (localBanners && localBanners.length > 0) {
+      const mappedBanners = localBanners.map((b: any, index: number) => ({
+        id: b.id || `banner_${index}`,
+        image: b.image,
+        title: b.title || null,
+        subtitle: b.subtitle || null,
+        caption: b.caption || null,
+        cta: b.cta || null,
+        active: !!b.active
+      }));
+      const { error: banError } = await supabase.from('banners').upsert(mappedBanners, { onConflict: 'id' });
+      if (banError) throw new Error(`Banners push failed: ${banError.message}`);
+    }
+
+    return res.json({ success: true, message: 'All data pushed successfully!' });

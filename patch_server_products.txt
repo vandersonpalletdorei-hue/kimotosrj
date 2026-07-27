@@ -1,0 +1,26 @@
+    let productsList: any[] = [];
+    if (remoteProducts) {
+      const configuredRemoteProducts = remoteProducts.filter((p: any) => p.preco !== null && p.preco !== undefined);
+      productsList = configuredRemoteProducts.map((p: any) => ({
+        id: p.id,
+        name: p.nome,
+        category: p.categoria,
+        categoryLabel: p.categoria_label || p.categoria,
+        brand: p.marca || '',
+        price: parseFloat(p.preco) || 0,
+        originalPrice: p.preco_original ? parseFloat(p.preco_original) : null,
+        image: p.imagem || '',
+        images: Array.isArray(p.imagens) ? p.imagens : [],
+        description: p.descricao || '',
+        rating: p.avaliacao !== null ? parseFloat(p.avaliacao) : 5,
+        reviewsCount: p.num_avaliacoes !== null ? parseInt(p.num_avaliacoes) : 0,
+        isPromo: !!p.em_promocao,
+        isNew: !!p.novo,
+        freeShipping: !!p.frete_gratis,
+        sizes: Array.isArray(p.tamanhos) ? p.tamanhos : [],
+        stock: p.estoque !== null ? parseInt(p.estoque) : 0,
+        subcategory: p.subcategoria || '',
+        attributes: p.atributos || null
+      }));
+      writeLocalProducts(productsList);
+    }

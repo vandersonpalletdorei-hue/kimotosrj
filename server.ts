@@ -10,7 +10,7 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -184,7 +184,6 @@ app.post('/api/products', async (req, res) => {
         marca: p.brand || '',
         preco: p.price,
         preco_original: p.originalPrice || null,
-        preco_original: p.originalPrice || null,
         imagem: p.image,
         imagens: p.images || null,
         descricao: p.description || '',
@@ -277,19 +276,50 @@ app.post('/api/categories', async (req, res) => {
 });
 
 // --- API Endpoints: Banners ---
-app.get('/api/banners', (req, res) => {
+app.get('/api/banners', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('banners').select('*');
+      if (!error && data) {
+        return res.json({ banners: data, source: 'supabase' });
+      }
+    } catch (e) {
+      console.warn("Banners table likely does not exist yet. Falling back to local.");
+    }
+  }
   res.json({ banners: readLocalBanners(), source: 'local' });
 });
 
-app.post('/api/banners', (req, res) => {
+app.post('/api/banners', async (req, res) => {
   const { banners } = req.body;
   if (!Array.isArray(banners)) {
     return res.status(400).json({ error: 'Body must contain a list of banners.' });
   }
 
   writeLocalBanners(banners);
+  if (supabase) {
+    try {
+      const mapped = banners.map((b: any, index: number) => ({
+        id: b.id || `banner_${index}`,
+        image: b.image,
+        title: b.title || null,
+        subtitle: b.subtitle || null,
+        caption: b.caption || null,
+        cta: b.cta || null,
+        active: !!b.active
+      }));
+      const { error } = await supabase.from('banners').upsert(mapped, { onConflict: 'id' });
+      if (error) throw new Error(error.message);
+    } catch (e: any) {
+      console.warn("Failed to push banners to supabase", e.message);
+      return res.status(500).json({ error: 'Erro ao salvar no banco de dados (Supabase): ' + e.message });
+    }
+  }
+  return res.json({ success: true });
+
   return res.json({ success: true });
 });
+
 
 
 // --- API Endpoints: Supabase Status & Sychronizations ---
@@ -300,7 +330,7 @@ app.get('/api/supabase/status', async (req, res) => {
     connected: false,
     url: supabaseUrl || null,
     error: null as string | null,
-    tables: { products: false, categories: false }
+    tables: { products: false, categories: false, banners: false }
   };
 
   if (!isConfigured) {
@@ -320,14 +350,19 @@ app.get('/api/supabase/status', async (req, res) => {
     // Check products table (produtos)
     const { error: prodError } = await supabase.from('produtos').select('id').limit(1);
     statusPayload.tables.products = !prodError;
+    
+    // Check banners table
+    const { error: banError } = await supabase.from('banners').select('id').limit(1);
+    statusPayload.tables.banners = !banError;
 
-    // Set connected if both are working
-    statusPayload.connected = statusPayload.tables.categories && statusPayload.tables.products;
+    // Set connected if all are working
+    statusPayload.connected = statusPayload.tables.categories && statusPayload.tables.products && statusPayload.tables.banners;
 
-    if (catError || prodError) {
+    if (catError || prodError || banError) {
       const errMsgs = [];
       if (catError) errMsgs.push(`Tabela 'categorias': ${catError.message}`);
       if (prodError) errMsgs.push(`Tabela 'produtos': ${prodError.message}`);
+      if (banError) errMsgs.push(`Tabela 'banners': ${banError.message}`);
       statusPayload.error = errMsgs.join(' | ');
     }
   } catch (err: any) {
@@ -336,6 +371,7 @@ app.get('/api/supabase/status', async (req, res) => {
 
   return res.json(statusPayload);
 });
+
 
 app.post('/api/supabase/push', async (req, res) => {
   if (!supabase) {
@@ -355,6 +391,7 @@ app.post('/api/supabase/push', async (req, res) => {
         descricao: c.description || ''
       }));
       const { error: catError } = await supabase.from('categorias').upsert(mappedCats, { onConflict: 'id' });
+    }
     // 2. Flush products
     if (localProducts.length > 0) {
       let mappedProds = localProducts.map((p: any) => ({
@@ -365,7 +402,6 @@ app.post('/api/supabase/push', async (req, res) => {
         categoria_label: p.categoryLabel || p.category,
         marca: p.brand || '',
         preco: p.price,
-        preco_original: p.originalPrice || null,
         preco_original: p.originalPrice || null,
         imagem: p.image,
         imagens: p.images || null,
@@ -391,10 +427,27 @@ app.post('/api/supabase/push', async (req, res) => {
 
       if (result.error) throw new Error(`Product push failed: ${result.error.message}`);
     }
+    
+    // 3. Flush banners
+    // 3. Flush banners
+    const localBanners = readLocalBanners();
+    if (localBanners && localBanners.length > 0) {
+      const mappedBanners = localBanners.map((b: any, index: number) => ({
+        id: b.id || `banner_${index}`,
+        image: b.image,
+        title: b.title || null,
+        subtitle: b.subtitle || null,
+        caption: b.caption || null,
+        cta: b.cta || null,
+        active: !!b.active
+      }));
+      const { error: banError } = await supabase.from('banners').upsert(mappedBanners, { onConflict: 'id' });
+      if (banError) {
+        console.warn(`[Supabase Push Warning] Banners push failed: ${banError.message}. Ignored because table might be missing.`);
+      }
     }
     return res.json({ success: true, message: 'All data pushed successfully!' });
   } catch (err: any) {
-
     console.error('[Supabase Push Error]', err.message);
     res.status(500).json({ error: err.message });
   }
@@ -406,11 +459,11 @@ app.post('/api/supabase/pull', async (req, res) => {
   }
 
   try {
-    const { data: remoteCategories, error: catError } = await supabase.from('categorias').select('*');
-    if (catError) throw new Error(`Category pull failed: ${catError.message}`);
-
     const { data: remoteProducts, error: prodError } = await supabase.from('produtos').select('*');
+    const { data: remoteCategories, error: catError } = await supabase.from('categorias').select('*');
+
     if (prodError) throw new Error(`Product pull failed: ${prodError.message}`);
+    if (catError) throw new Error(`Category pull failed: ${catError.message}`);
 
     // If successfully pulled, map categories back to English client structure
     let categoriesList: any[] = [];
@@ -424,10 +477,10 @@ app.post('/api/supabase/pull', async (req, res) => {
       writeLocalCategories(categoriesList);
     }
 
+
     // Map products back to English client structure
     let productsList: any[] = [];
     if (remoteProducts) {
-      // Filter out raw rows that lack price or configuration to get exactly the 77 cadastrados products
       const configuredRemoteProducts = remoteProducts.filter((p: any) => p.preco !== null && p.preco !== undefined);
       productsList = configuredRemoteProducts.map((p: any) => ({
         id: p.id,
@@ -452,6 +505,35 @@ app.post('/api/supabase/pull', async (req, res) => {
       }));
       writeLocalProducts(productsList);
     }
+
+    // Pull banners if they exist
+    let bannersCount = 0;
+    try {
+      const { data: remoteBanners, error: banError } = await supabase.from('banners').select('*');
+      if (!banError && remoteBanners) {
+        const bannersList = remoteBanners.map((b: any) => ({
+          id: b.id,
+          image: b.image,
+          title: b.title || undefined,
+          subtitle: b.subtitle || undefined,
+          caption: b.caption || undefined,
+          cta: b.cta || undefined,
+          active: !!b.active
+        }));
+        writeLocalBanners(bannersList);
+        bannersCount = bannersList.length;
+      }
+    } catch (e) {
+      console.warn("Banners pull failed, ignoring");
+    }
+
+    return res.json({
+      success: true,
+      categoriesCount: categoriesList.length,
+      productsCount: productsList.length,
+      bannersCount
+    });
+
 
     return res.json({
       success: true,

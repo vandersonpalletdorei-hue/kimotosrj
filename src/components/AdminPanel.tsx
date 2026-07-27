@@ -19,7 +19,7 @@ interface SupabaseStatus {
   connected: boolean;
   url: string | null;
   error: string | null;
-  tables: { products: boolean; categories: boolean };
+  tables: { products: boolean; categories: boolean; banners: boolean };
 }
 
 const safeSetBanners = (updated: Banner[]) => {
@@ -227,7 +227,24 @@ create table if not exists public.produtos (
 
 alter table public.produtos enable row level security;
 create policy "Acesso público irrestrita" on public.produtos for select using (true);
-create policy "Escrita irrestrita" on public.produtos for all using (true) with check (true);`;
+create policy "Escrita irrestrita" on public.produtos for all using (true) with check (true);
+
+-- 3. CRIAR TABELA DE BANNERS
+create table if not exists public.banners (
+  id text primary key,
+  image text not null,
+  title text,
+  subtitle text,
+  caption text,
+  cta text,
+  active boolean default true
+);
+
+alter table public.banners enable row level security;
+create policy "Acesso público irrestrita" on public.banners for select using (true);
+create policy "Escrita irrestrita" on public.banners for all using (true) with check (true);
+`;
+
 
   const copySqlToClipboard = () => {
 

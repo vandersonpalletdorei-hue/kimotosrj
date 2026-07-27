@@ -1,0 +1,30 @@
+      writeLocalProducts(productsList);
+    }
+    
+    // Pull banners if they exist
+    let bannersCount = 0;
+    try {
+      const { data: remoteBanners, error: banError } = await supabase.from('banners').select('*');
+      if (!banError && remoteBanners) {
+        const bannersList = remoteBanners.map((b: any) => ({
+          id: b.id,
+          image: b.image,
+          title: b.title || undefined,
+          subtitle: b.subtitle || undefined,
+          caption: b.caption || undefined,
+          cta: b.cta || undefined,
+          active: !!b.active
+        }));
+        writeLocalBanners(bannersList);
+        bannersCount = bannersList.length;
+      }
+    } catch (e) {
+      console.warn("Banners pull failed, ignoring");
+    }
+
+    return res.json({
+      success: true,
+      categoriesCount: categoriesList.length,
+      productsCount: productsList.length,
+      bannersCount
+    });

@@ -1,0 +1,28 @@
+    // Check categories table (categorias)
+    const { error: catError } = await supabase.from('categorias').select('id').limit(1);
+    statusPayload.tables.categories = !catError;
+
+    // Check products table (produtos)
+    const { error: prodError } = await supabase.from('produtos').select('id').limit(1);
+    statusPayload.tables.products = !prodError;
+    
+    // Check banners table
+    const { error: banError } = await supabase.from('banners').select('id').limit(1);
+    statusPayload.tables.banners = !banError;
+
+    // Set connected if all are working
+    statusPayload.connected = statusPayload.tables.categories && statusPayload.tables.products && statusPayload.tables.banners;
+
+    if (catError || prodError || banError) {
+      const errMsgs = [];
+      if (catError) errMsgs.push(`Tabela 'categorias': ${catError.message}`);
+      if (prodError) errMsgs.push(`Tabela 'produtos': ${prodError.message}`);
+      if (banError) errMsgs.push(`Tabela 'banners': ${banError.message}`);
+      statusPayload.error = errMsgs.join(' | ');
+    }
+  } catch (err: any) {
+    statusPayload.error = err.message || 'Error executing query on Supabase.';
+  }
+
+  return res.json(statusPayload);
+});

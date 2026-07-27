@@ -1,0 +1,11 @@
+    // If successfully pulled, map categories back to English client structure
+    let categoriesList: any[] = [];
+    if (remoteCategories) {
+      categoriesList = remoteCategories.map((c: any) => ({
+        id: c.id,
+        name: c.nome,
+        icon: c.icone || 'Shield',
+        description: c.descricao || ''
+      }));
+      writeLocalCategories(categoriesList);
+    }

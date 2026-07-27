@@ -1,20 +1,35 @@
-                  className="px-4 py-2 border rounded-sm text-xs font-bold hover:bg-slate-550 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase rounded-lg transition-colors"
-                >
-                  Salvar
-                </button>
-              </div>
-            </form>
-          )}
+    // 3. Flush banners
+    const localBanners = readLocalBanners();
+    if (localBanners && localBanners.length > 0) {
+      const mappedBanners = localBanners.map((b: any, index: number) => ({
+        id: b.id || `banner_${index}`,
+        image: b.image,
+        title: b.title || null,
+        subtitle: b.subtitle || null,
+        caption: b.caption || null,
+        cta: b.cta || null,
+        active: !!b.active
+      }));
+      const { error: banError } = await supabase.from('banners').upsert(mappedBanners, { onConflict: 'id' });
+      if (banError) throw new Error(`Banners push failed: ${banError.message}`);
+    }
+    return res.json({ success: true, message: 'All data pushed successfully!' });
+  } catch (err: any) {
+    console.error('[Supabase Push Error]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
-          {activeTab === 'banner' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">Banners Cadastrados ({banners.length})</span>
-                <div className="flex items-center gap-3">
-                  {bannerMessage && (
+app.post('/api/supabase/pull', async (req, res) => {
+  if (!supabase) {
+    return res.status(400).json({ error: 'Supabase integration is not configured.' });
+  }
+
+  try {
+    const { data: remoteProducts, error: prodError } = await supabase.from('produtos').select('*');
+    const { data: remoteCategories, error: catError } = await supabase.from('categorias').select('*');
+
+    if (prodError) throw new Error(`Product pull failed: ${prodError.message}`);
+    if (catError) throw new Error(`Category pull failed: ${catError.message}`);
+
+    // If successfully pulled, map categories back to English client structure

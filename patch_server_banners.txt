@@ -1,0 +1,41 @@
+app.get('/api/banners', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('banners').select('*');
+      if (!error && data) {
+        return res.json({ banners: data, source: 'supabase' });
+      }
+    } catch (e) {
+      console.warn("Banners table likely does not exist yet. Falling back to local.");
+    }
+  }
+  res.json({ banners: readLocalBanners(), source: 'local' });
+});
+
+app.post('/api/banners', async (req, res) => {
+  const { banners } = req.body;
+  if (!Array.isArray(banners)) {
+    return res.status(400).json({ error: 'Body must contain a list of banners.' });
+  }
+
+  writeLocalBanners(banners);
+
+  if (supabase) {
+    try {
+      const mapped = banners.map((b: any, index: number) => ({
+        id: b.id || `banner_${index}`,
+        image: b.image,
+        title: b.title || null,
+        subtitle: b.subtitle || null,
+        caption: b.caption || null,
+        cta: b.cta || null,
+        active: !!b.active
+      }));
+      await supabase.from('banners').upsert(mapped, { onConflict: 'id' });
+    } catch (e) {
+      console.warn("Failed to push banners to supabase");
+    }
+  }
+
+  return res.json({ success: true });
+});

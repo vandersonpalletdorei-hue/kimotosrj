@@ -1,0 +1,20 @@
+        if (cData.categories && cData.categories.length > 0) {
+          loadedCategories = cData.categories;
+          localStorage.setItem(
+            "kimotos_categories",
+            JSON.stringify(cData.categories),
+          );
+        }
+        if (bData && Array.isArray(bData.banners)) {
+          loadedBanners = bData.banners;
+          localStorage.setItem(
+            "kimotos_banners",
+            JSON.stringify(bData.banners),
+          );
+        }
+      }
+    } catch (err) {
+      console.log("Running in offline-fallback static state:", err);
+    }
+
+    setProducts(loadedProducts);

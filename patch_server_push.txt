@@ -1,0 +1,23 @@
+      if (result.error) throw new Error(`Product push failed: ${result.error.message}`);
+    }
+    
+    // 3. Flush banners
+    const localBanners = readLocalBanners();
+    if (localBanners && localBanners.length > 0) {
+      const mappedBanners = localBanners.map((b: any, index: number) => ({
+        id: b.id || `banner_${index}`,
+        image: b.image,
+        title: b.title || null,
+        subtitle: b.subtitle || null,
+        caption: b.caption || null,
+        cta: b.cta || null,
+        active: !!b.active
+      }));
+      try {
+        await supabase.from('banners').upsert(mappedBanners, { onConflict: 'id' });
+      } catch (e) {
+        console.warn("Banners push failed, maybe table doesn't exist");
+      }
+    }
+
+    return res.json({ success: true, message: 'All data pushed successfully!' });

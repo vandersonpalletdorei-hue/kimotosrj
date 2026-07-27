@@ -90,7 +90,7 @@ export default function App() {
     try {
       const pRes = await fetch("/api/products");
       const cRes = await fetch("/api/categories");
-      const bRes = await fetch("/api/banners");
+      const bRes = await fetch(`/api/banners?_t=${Date.now()}`);
       
       if (pRes.ok && cRes.ok) {
         const pData = await pRes.json();
@@ -111,7 +111,7 @@ export default function App() {
             JSON.stringify(cData.categories),
           );
         }
-        if (bData && bData.banners && bData.banners.length > 0) {
+        if (bData && Array.isArray(bData.banners)) {
           loadedBanners = bData.banners;
           localStorage.setItem(
             "kimotos_banners",
@@ -122,6 +122,8 @@ export default function App() {
     } catch (err) {
       console.log("Running in offline-fallback static state:", err);
     }
+
+
 
     setProducts(loadedProducts);
     setCategories(loadedCategories);

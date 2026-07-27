@@ -1,0 +1,9 @@
+        if (bData && Array.isArray(bData.banners)) {
+          loadedBanners = bData.banners;
+          localStorage.setItem(
+            "kimotos_banners",
+            JSON.stringify(bData.banners),
+          );
+        }
+      }
+    } catch (err) {

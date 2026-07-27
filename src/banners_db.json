@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "id": "test",
+    "image": "",
+    "title": "",
+    "active": true
+  }
+]
