@@ -37,8 +37,36 @@ interface HeroSectionProps {
 export default function HeroSection({ banners }: HeroSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Use only active banners
-  const activeBanners = banners.filter(b => b.active);
+  const DEFAULT_BANNERS = [
+    "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200",
+    "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200",
+    "https://images.unsplash.com/photo-1590201146747-d352bc85fbcc?q=80&w=1200"
+  ];
+
+  const FALLBACK_ACTIVE_BANNERS: Banner[] = [
+    {
+      id: "ban-1",
+      title: "Kimotos Motopeças - As Melhores Peças e Acessórios",
+      image: DEFAULT_BANNERS[0],
+      active: true
+    },
+    {
+      id: "ban-2",
+      title: "Capacetes e Equipamentos de Segurança",
+      image: DEFAULT_BANNERS[1],
+      active: true
+    },
+    {
+      id: "ban-3",
+      title: "Peças de Reposição & Alta Performance",
+      image: DEFAULT_BANNERS[2],
+      active: true
+    }
+  ];
+
+  // Use only active banners, fallback if empty
+  const rawActive = (banners || []).filter(b => b.active);
+  const activeBanners = rawActive.length > 0 ? rawActive : FALLBACK_ACTIVE_BANNERS;
 
   useEffect(() => {
     if (currentSlide >= activeBanners.length) {
@@ -47,7 +75,6 @@ export default function HeroSection({ banners }: HeroSectionProps) {
   }, [activeBanners.length, currentSlide]);
 
   useEffect(() => {
-
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
     }, 6000);
@@ -63,16 +90,6 @@ export default function HeroSection({ banners }: HeroSectionProps) {
     if (activeBanners.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
   };
-
-  const DEFAULT_BANNERS = [
-    "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200",
-    "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200",
-    "https://images.unsplash.com/photo-1590201146747-d352bc85fbcc?q=80&w=1200"
-  ];
-
-  if (activeBanners.length === 0) {
-    return null;
-  }
 
   return (
     <section className="relative w-full bg-slate-900 group overflow-hidden shadow-sm grid">

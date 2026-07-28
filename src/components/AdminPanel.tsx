@@ -85,7 +85,7 @@ export default function AdminPanel({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+    const adminPassword = (import.meta as any).env?.VITE_ADMIN_PASSWORD || 'admin123';
     if (passwordInput === adminPassword) {
       setIsAuthenticated(true);
       setPasswordError(false);
@@ -101,7 +101,7 @@ export default function AdminPanel({
     connected: false,
     url: null,
     error: null,
-    tables: { products: false, categories: false }
+    tables: { products: false, categories: false, banners: false }
   });
 
   const [copiedSql, setCopiedSql] = useState(false);
@@ -112,11 +112,13 @@ export default function AdminPanel({
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [itemForm, setItemForm] = useState<Partial<Product>>({});
   const [showProductForm, setShowProductForm] = useState(false);
+  const [productMessage, setProductMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form states for Categories CRUD
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [catForm, setCatForm] = useState<Partial<Category>>({});
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [categoryMessage, setCategoryMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch Supabase configuration status from Express Server
   const fetchSupabaseStatus = async () => {
@@ -258,8 +260,14 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
   const handleOpenProductForm = (p: Product | null) => {
     if (p) {
       setEditingProduct(p);
-      setItemForm({ ...p });
+      const isHelmet = p.category === 'capacetes';
+      setItemForm({
+        ...p,
+        sizes: isHelmet ? (p.sizes && p.sizes.length > 0 ? p.sizes.filter(s => ['56', '58', '60'].includes(s)) : ['56', '58', '60']) : undefined
+      });
     } else {
+      const initialCat = categories[0]?.id || '';
+      const isHelmet = initialCat === 'capacetes';
       setEditingProduct(null);
       setItemForm({
         id: `prod-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -267,7 +275,7 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
         brand: '',
         price: 0,
         originalPrice: undefined,
-        category: categories[0]?.id || '',
+        category: initialCat,
         categoryLabel: categories[0]?.name || '',
         image: 'https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&q=80&w=600',
         description: '',
@@ -278,7 +286,7 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
         isNew: true,
         isPromo: false,
         freeShipping: false,
-        sizes: ['56', '58', '60']
+        sizes: isHelmet ? ['56', '58', '60'] : undefined
       });
     }
     setShowProductForm(true);
@@ -292,10 +300,15 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
     }
 
     const currentCat = categories.find(c => c.id === itemForm.category);
+    const isHelmet = itemForm.category === 'capacetes';
+    const finalSizes = isHelmet
+      ? (itemForm.sizes && itemForm.sizes.length > 0 ? itemForm.sizes.filter(s => ['56', '58', '60'].includes(s)) : ['56', '58', '60'])
+      : undefined;
 
     const updatedForm = {
       ...itemForm,
-      categoryLabel: currentCat ? currentCat.name : itemForm.category
+      categoryLabel: currentCat ? currentCat.name : itemForm.category,
+      sizes: finalSizes
     } as Product;
 
     let updatedProducts: Product[] = [];
@@ -322,9 +335,38 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
         body: JSON.stringify({ products: updatedProducts })
       });
       fetchSupabaseStatus();
+      setProductMessage({ type: 'success', text: 'Peça gravada com sucesso no banco de dados!' });
+      setTimeout(() => setProductMessage(null), 3500);
     } catch (err: any) {
       console.log('Skipping backend sync on product save (running in static offline mode):', err.message);
+      setProductMessage({ type: 'success', text: 'Peça salva localmente!' });
+      setTimeout(() => setProductMessage(null), 3500);
     }
+  };
+
+  const handleSaveProducts = async () => {
+    try {
+      try {
+        localStorage.setItem('kimotos_products', JSON.stringify(products));
+      } catch (e) {
+        console.warn('Could not update kimotos_products in localStorage cache:', e);
+      }
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products })
+      });
+      if (res.ok) {
+        setProductMessage({ type: 'success', text: 'Alterações de motopeças gravadas no banco de dados!' });
+        fetchSupabaseStatus();
+      } else {
+        setProductMessage({ type: 'error', text: 'Erro ao gravar no banco de dados!' });
+      }
+    } catch (error) {
+      console.error('Erro ao salvar produtos:', error);
+      setProductMessage({ type: 'error', text: 'Erro de conexão ao salvar!' });
+    }
+    setTimeout(() => setProductMessage(null), 3500);
   };
 
   const handleProductDelete = async (id: string) => {
@@ -339,16 +381,21 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
     }
     onProductsUpdate(updated);
 
-    // Try server sync
+    // Try server sync (both explicit DELETE endpoint and POST full list)
     try {
+      await fetch(`/api/products/${id}`, { method: 'DELETE' });
       await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ products: updated })
       });
       fetchSupabaseStatus();
+      setProductMessage({ type: 'success', text: 'Peça deletada e removida do banco com sucesso!' });
+      setTimeout(() => setProductMessage(null), 3500);
     } catch (err: any) {
       console.log('Skipping backend sync on product delete (running in static offline mode):', err.message);
+      setProductMessage({ type: 'success', text: 'Peça deletada localmente!' });
+      setTimeout(() => setProductMessage(null), 3500);
     }
   };
 
@@ -367,6 +414,31 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
       });
     }
     setShowCategoryForm(true);
+  };
+
+  const handleSaveCategories = async () => {
+    try {
+      try {
+        localStorage.setItem('kimotos_categories', JSON.stringify(categories));
+      } catch (e) {
+        console.warn('Could not update kimotos_categories in localStorage cache:', e);
+      }
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categories })
+      });
+      if (res.ok) {
+        setCategoryMessage({ type: 'success', text: 'Categorias gravadas no banco de dados com sucesso!' });
+        fetchSupabaseStatus();
+      } else {
+        setCategoryMessage({ type: 'error', text: 'Erro ao gravar categorias no banco!' });
+      }
+    } catch (error) {
+      console.error('Erro ao salvar categorias:', error);
+      setCategoryMessage({ type: 'error', text: 'Erro de conexão ao salvar!' });
+    }
+    setTimeout(() => setCategoryMessage(null), 3500);
   };
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
@@ -401,8 +473,12 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
         body: JSON.stringify({ categories: updated })
       });
       fetchSupabaseStatus();
+      setCategoryMessage({ type: 'success', text: 'Categoria salva com sucesso no banco!' });
+      setTimeout(() => setCategoryMessage(null), 3500);
     } catch (err: any) {
       console.log('Skipping backend sync on category save (running in static offline mode):', err.message);
+      setCategoryMessage({ type: 'success', text: 'Categoria salva localmente!' });
+      setTimeout(() => setCategoryMessage(null), 3500);
     }
   };
 
@@ -420,14 +496,19 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
 
     // Try server sync
     try {
+      await fetch(`/api/categories/${id}`, { method: 'DELETE' });
       await fetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categories: updated })
       });
       fetchSupabaseStatus();
+      setCategoryMessage({ type: 'success', text: 'Categoria deletada e removida do banco com sucesso!' });
+      setTimeout(() => setCategoryMessage(null), 3500);
     } catch (err: any) {
       console.log('Skipping backend sync on category delete (running in static offline mode):', err.message);
+      setCategoryMessage({ type: 'success', text: 'Categoria deletada localmente!' });
+      setTimeout(() => setCategoryMessage(null), 3500);
     }
   };
 
@@ -695,14 +776,37 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
           {/* Products CRUD view */}
           {activeTab === 'prod' && !showProductForm && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center bg-white p-3 border rounded-xl shadow-xs">
-                <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">Motopeças Listadas ({products.length})</span>
-                <button
-                  onClick={() => handleOpenProductForm(null)}
-                  className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-wider py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> Adicionar Peça
-                </button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-3 border rounded-xl shadow-xs gap-3">
+                <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">
+                  Motopeças Listadas ({products.length})
+                </span>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {productMessage && (
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                      productMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200'
+                    }`}>
+                      {productMessage.text}
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleSaveProducts}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    title="Confirmar e gravar todas as alterações de motopeças no banco de dados"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Confirmar Alterações
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenProductForm(null)}
+                    className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-wider py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" /> Adicionar Peça
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5">
@@ -813,7 +917,15 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
                   <label className="block text-[10px] font-extrabold text-slate-600 uppercase mb-1">Categoria de Referência *</label>
                   <select
                     value={itemForm.category}
-                    onChange={e => setItemForm({ ...itemForm, category: e.target.value })}
+                    onChange={e => {
+                      const selectedCat = e.target.value;
+                      const isHelmet = selectedCat === 'capacetes';
+                      setItemForm({
+                        ...itemForm,
+                        category: selectedCat,
+                        sizes: isHelmet ? ['56', '58', '60'] : undefined
+                      });
+                    }}
                     className="w-full px-3 py-2 border rounded-lg text-xs font-semibold bg-white"
                   >
                     {categories.map((c) => (
@@ -843,6 +955,42 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
                   />
                 </div>
               </div>
+
+              {/* Sizes selection only for Capacetes category */}
+              {itemForm.category === 'capacetes' && (
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-2">
+                    Tamanhos de Capacete Disponíveis (56, 58, 60) *
+                  </label>
+                  <div className="flex gap-4">
+                    {['56', '58', '60'].map((sz) => {
+                      const current = itemForm.sizes || ['56', '58', '60'];
+                      const isChecked = current.includes(sz);
+                      return (
+                        <label key={sz} className="flex items-center gap-1.5 cursor-pointer text-xs font-black text-slate-800">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              let next: string[];
+                              if (e.target.checked) {
+                                next = [...current, sz].sort();
+                              } else {
+                                next = current.filter(s => s !== sz);
+                              }
+                              setItemForm({ ...itemForm, sizes: next });
+                            }}
+                          />
+                          <span>Tamanho {sz}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-1">
+                    Apenas capacetes possuem tamanho obrigatório (56, 58 ou 60).
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-[10px] font-extrabold text-slate-600 uppercase mb-2">Imagens do Produto (Até 5) *</label>
@@ -968,14 +1116,37 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
           {/* Categories CRUD view */}
           {activeTab === 'cat' && !showCategoryForm && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center bg-white p-3 border rounded-xl shadow-xs">
-                <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">Categorias Cadastradas ({categories.length})</span>
-                <button
-                  onClick={() => handleOpenCatForm(null)}
-                  className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-wider py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> Nova Categoria
-                </button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-3 border rounded-xl shadow-xs gap-3">
+                <span className="text-slate-600 font-extrabold text-[11px] uppercase tracking-wider">
+                  Categorias Cadastradas ({categories.length})
+                </span>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {categoryMessage && (
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                      categoryMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200'
+                    }`}>
+                      {categoryMessage.text}
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleSaveCategories}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    title="Confirmar e gravar alterações de categorias no banco de dados"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Confirmar Alterações
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCatForm(null)}
+                    className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-wider py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" /> Nova Categoria
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5">

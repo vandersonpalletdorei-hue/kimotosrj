@@ -62,17 +62,36 @@ export default function App() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
+  // Helper for safe localStorage writes without throwing QuotaExceededError
+  const safeSetLocalStorage = (key: string, value: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+      console.warn(`Storage limit reached when setting ${key}:`, err);
+      // If quota exceeded, try removing large cached catalogs to make room for cart or user state
+      try {
+        if (key === "kimotos_cart") {
+          localStorage.removeItem("kimotos_banners");
+          localStorage.removeItem("kimotos_products");
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+      } catch (retryErr) {
+        console.warn(`Failed to set ${key} even after clearing cache:`, retryErr);
+      }
+    }
+  };
+
   // Sync cart to LocalStorage on modifications
   useEffect(() => {
-    localStorage.setItem("kimotos_cart", JSON.stringify(cart));
+    safeSetLocalStorage("kimotos_cart", cart);
   }, [cart]);
 
   // Load catalogs on mount
   const loadData = async () => {
     setLoading(true);
-    let loadedProducts = INITIAL_PRODUCTS as Product[];
+    let loadedProducts = INITIAL_PRODUCTS as unknown as Product[];
     let loadedCategories = INITIAL_CATEGORIES as Category[];
-    let loadedBanners = INITIAL_BANNERS as Banner[];
+    let loadedBanners = INITIAL_BANNERS as unknown as Banner[];
 
     // 1. Check local storage first (for customized state in client)
     try {
@@ -99,28 +118,23 @@ export default function App() {
         
         if (pData.products && pData.products.length > 0) {
           loadedProducts = pData.products;
-          localStorage.setItem(
-            "kimotos_products",
-            JSON.stringify(pData.products),
-          );
+          safeSetLocalStorage("kimotos_products", pData.products);
         }
         if (cData.categories && cData.categories.length > 0) {
           loadedCategories = cData.categories;
-          localStorage.setItem(
-            "kimotos_categories",
-            JSON.stringify(cData.categories),
-          );
+          safeSetLocalStorage("kimotos_categories", cData.categories);
         }
-        if (bData && Array.isArray(bData.banners)) {
+        if (bData && Array.isArray(bData.banners) && bData.banners.length > 0) {
           loadedBanners = bData.banners;
-          localStorage.setItem(
-            "kimotos_banners",
-            JSON.stringify(bData.banners),
-          );
+          safeSetLocalStorage("kimotos_banners", bData.banners);
         }
       }
     } catch (err) {
       console.log("Running in offline-fallback static state:", err);
+    }
+
+    if (!loadedBanners || loadedBanners.length === 0) {
+      loadedBanners = INITIAL_BANNERS as unknown as Banner[];
     }
 
 

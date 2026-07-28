@@ -15,14 +15,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "Geral",
-    "attributes": {
-      "tamanho": "Unitário"
-    }
+    "attributes": {}
   },
   {
     "id": "ace-5328",
@@ -40,14 +35,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 38,
     "subcategory": "Geral",
-    "attributes": {
-      "tamanho": "58"
-    }
+    "attributes": {}
   },
   {
     "id": "ves-0561",
@@ -65,18 +55,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "P",
-      "M",
-      "G",
-      "GG",
-      "EGG"
-    ],
     "stock": 38,
     "subcategory": "coletes",
-    "attributes": {
-      "tamanho": "Unitário"
-    }
+    "attributes": {}
   },
   {
     "id": "ves-0757",
@@ -94,18 +75,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "P",
-      "M",
-      "G",
-      "GG",
-      "EGG"
-    ],
     "stock": 37,
     "subcategory": "capas de chuva",
-    "attributes": {
-      "tamanho": "Unitário"
-    }
+    "attributes": {}
   },
   {
     "id": "pec-1778",
@@ -123,9 +95,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "Fechado",
     "attributes": {
@@ -150,9 +119,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Fechado",
     "attributes": {
@@ -177,9 +143,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Fechado",
     "attributes": {
@@ -204,9 +167,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 38,
     "subcategory": "Fechado",
     "attributes": {}
@@ -227,9 +187,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Fechado",
     "attributes": {}
@@ -250,9 +207,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Fechado",
     "attributes": {}
@@ -273,9 +227,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 36,
     "subcategory": "Fechado",
     "attributes": {}
@@ -296,9 +247,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {}
@@ -319,9 +267,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Fechado",
     "attributes": {}
@@ -342,9 +287,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {}
@@ -365,9 +307,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Fechado",
     "attributes": {}
@@ -388,9 +327,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Fechado",
     "attributes": {}
@@ -411,9 +347,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -438,9 +371,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Geral",
     "attributes": {
@@ -465,9 +395,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 10,
     "subcategory": "Geral",
     "attributes": {
@@ -492,9 +419,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 14,
     "subcategory": "Geral",
     "attributes": {
@@ -519,9 +443,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 12,
     "subcategory": "Fechado",
     "attributes": {
@@ -546,14 +467,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Fechado",
-    "attributes": {
-      "tamanho": "Unitário"
-    }
+    "attributes": {}
   },
   {
     "id": "ace-5302",
@@ -571,14 +487,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
-    "attributes": {
-      "tamanho": "Unitário"
-    }
+    "attributes": {}
   },
   {
     "id": "ace-1007",
@@ -596,14 +507,9 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Fechado",
-    "attributes": {
-      "tamanho": "Unitário"
-    }
+    "attributes": {}
   },
   {
     "id": "pec-4570",
@@ -621,9 +527,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 12,
     "subcategory": "carburador",
     "attributes": {
@@ -648,9 +551,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 18,
     "subcategory": "completo",
     "attributes": {
@@ -675,9 +575,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -702,9 +599,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -729,9 +623,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": true,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -756,9 +647,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -783,9 +671,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -810,9 +695,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -837,9 +719,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 30,
     "subcategory": "Geral",
     "attributes": {
@@ -864,9 +743,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Geral",
     "attributes": {
@@ -891,9 +767,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "Geral",
     "attributes": {
@@ -918,9 +791,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Geral",
     "attributes": {
@@ -945,9 +815,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Geral",
     "attributes": {
@@ -972,9 +839,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Geral",
     "attributes": {
@@ -999,9 +863,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 33,
     "subcategory": "Relação",
     "attributes": {
@@ -1025,9 +886,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Geral",
     "attributes": {
@@ -1052,9 +910,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 35,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1079,9 +934,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1106,9 +958,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1133,9 +982,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1160,9 +1006,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1187,9 +1030,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1213,9 +1053,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 36,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1239,9 +1076,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 33,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1265,9 +1099,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 33,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1291,9 +1122,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "RELAÇÃO",
     "attributes": {
@@ -1317,9 +1145,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Relação",
     "attributes": {
@@ -1343,9 +1168,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "Relação",
     "attributes": {
@@ -1369,9 +1191,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 33,
     "subcategory": "corrente",
     "attributes": {
@@ -1395,9 +1214,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Geral",
     "attributes": {
@@ -1421,9 +1237,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 33,
     "subcategory": "Geral",
     "attributes": {
@@ -1447,9 +1260,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 50,
     "subcategory": "Geral",
     "attributes": {
@@ -1473,9 +1283,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 26,
     "subcategory": "Geral",
     "attributes": {}
@@ -1496,9 +1303,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": true,
-    "sizes": [
-      "Único"
-    ],
     "stock": 35,
     "subcategory": "Geral",
     "attributes": {}
@@ -1519,9 +1323,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 43,
     "subcategory": "Geral",
     "attributes": {}
@@ -1542,9 +1343,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 34,
     "subcategory": "Geral",
     "attributes": {}
@@ -1565,9 +1363,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Geral",
     "attributes": {}
@@ -1588,9 +1383,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 37,
     "subcategory": "Geral",
     "attributes": {}
@@ -1611,9 +1403,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": true,
-    "sizes": [
-      "Único"
-    ],
     "stock": 52,
     "subcategory": "Geral",
     "attributes": {}
@@ -1634,9 +1423,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 38,
     "subcategory": "Geral",
     "attributes": {}
@@ -1657,9 +1443,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 33,
     "subcategory": "Geral",
     "attributes": {}
@@ -1680,10 +1463,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "58",
-      "60"
-    ],
     "stock": 48,
     "subcategory": "Geral",
     "attributes": {}
@@ -1704,9 +1483,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 40,
     "subcategory": "Geral",
     "attributes": {}
@@ -1727,9 +1503,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 40,
     "subcategory": "Geral",
     "attributes": {}
@@ -1750,9 +1523,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 23,
     "subcategory": "Geral",
     "attributes": {}
@@ -1773,10 +1543,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "58",
-      "60"
-    ],
     "stock": 40,
     "subcategory": "Geral",
     "attributes": {}
@@ -1797,9 +1563,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 28,
     "subcategory": "Geral",
     "attributes": {}
@@ -1820,9 +1583,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 39,
     "subcategory": "Geral",
     "attributes": {}
@@ -1843,9 +1603,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": true,
-    "sizes": [
-      "Único"
-    ],
     "stock": 29,
     "subcategory": "Geral",
     "attributes": {}
@@ -1866,9 +1623,6 @@
     "isPromo": false,
     "isNew": true,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 50,
     "subcategory": "Fechado",
     "attributes": {}
@@ -1947,9 +1701,6 @@
     "isPromo": false,
     "isNew": false,
     "freeShipping": false,
-    "sizes": [
-      "Único"
-    ],
     "stock": 45,
     "subcategory": "Dianteiro/Traseiro",
     "attributes": {}

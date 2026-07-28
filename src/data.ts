@@ -47,7 +47,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     isPromo: true,
     isNew: true,
     freeShipping: true,
-    sizes: ['56', '58', '60', '62'],
+    sizes: ['56', '58', '60'],
     stock: 12,
     subcategory: 'Capacetes Fechados',
     attributes: {
@@ -141,7 +141,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     rating: 4.5,
     reviewsCount: 54,
     isPromo: true,
-    sizes: ['P', 'M', 'G', 'GG'],
     stock: 45,
     subcategory: 'Luvas',
     attributes: {

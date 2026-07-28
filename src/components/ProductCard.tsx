@@ -135,11 +135,18 @@ export default function ProductCard({
           <div className="mt-3.5">
             {product.stock > 0 ? (
               <button
-                onClick={() => onAddToCart(product)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (product.category === 'capacetes') {
+                    onSelectProduct(product);
+                  } else {
+                    onAddToCart(product);
+                  }
+                }}
                 className="w-full bg-slate-900 hover:bg-red-600 text-white font-extrabold uppercase tracking-wider text-[10px] py-2 px-3 rounded-md flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border border-transparent hover:border-red-600"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
-                <span>Adicionar</span>
+                <span>{product.category === 'capacetes' ? 'Escolher Tamanho' : 'Adicionar'}</span>
               </button>
             ) : (
               <button

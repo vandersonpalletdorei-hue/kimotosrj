@@ -18,12 +18,20 @@ export default function QuickViewModal({
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
 
+  const isHelmetCategory = product.category === 'capacetes' || product.categoryLabel?.toLowerCase().includes('capacete') || product.name.toLowerCase().includes('capacete');
+  const allowedHelmetSizes = ['56', '58', '60'];
+  const helmetSizes = isHelmetCategory 
+    ? (product.sizes && product.sizes.length > 0 
+        ? product.sizes.filter(s => allowedHelmetSizes.includes(s)) 
+        : allowedHelmetSizes)
+    : [];
+
   const handleAdd = () => {
-    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert('Por favor, selecione um tamanho antes de adicionar ao carrinho!');
+    if (isHelmetCategory && !selectedSize) {
+      alert('Por favor, selecione o tamanho do capacete (56, 58 ou 60) antes de adicionar ao carrinho!');
       return;
     }
-    onAddToCart(product, selectedSize);
+    onAddToCart(product, isHelmetCategory ? selectedSize : undefined);
     onClose();
   };
 
@@ -113,17 +121,17 @@ export default function QuickViewModal({
                   <p className="text-[10px] text-gray-500 mt-1">Ou parcelado em até 4x de R$ {(product.price / 4).toFixed(2)} sem juros</p>
                 </div>
 
-                {/* Sizes configurations if applicable */}
-                {product.sizes && product.sizes.length > 0 && (
+                {/* Sizes configurations only for Capacetes category */}
+                {isHelmetCategory && helmetSizes.length > 0 && (
                   <div className="mt-5">
-                    <label className="block text-[10px] font-black text-slate-600 uppercase mb-2">Selecione o Tamanho:</label>
+                    <label className="block text-[10px] font-black text-slate-600 uppercase mb-2">Selecione o Tamanho do Capacete (56, 58 ou 60):</label>
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.map((sz) => (
+                      {helmetSizes.map((sz) => (
                         <button
                           key={sz}
                           type="button"
                           onClick={() => setSelectedSize(sz)}
-                          className={`min-w-[40px] h-[40px] border px-2 text-xs font-black uppercase rounded-lg cursor-pointer transition-all ${
+                          className={`min-w-[40px] h-[40px] border px-3 text-xs font-black uppercase rounded-lg cursor-pointer transition-all ${
                             selectedSize === sz
                               ? 'bg-red-600 text-white border-red-600 shadow-md'
                               : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400'

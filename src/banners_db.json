@@ -1,8 +1,23 @@
 [
   {
-    "id": "test",
-    "image": "",
-    "title": "",
+    "id": "ban-1",
+    "title": "Kimotos Motopeças - As Melhores Peças e Acessórios",
+    "subtitle": "Qualidade, durabilidade e entrega rápida para sua moto",
+    "image": "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=1600",
+    "active": true
+  },
+  {
+    "id": "ban-2",
+    "title": "Capacetes e Equipamentos de Segurança",
+    "subtitle": "As melhores marcas com parcelamento em até 4x sem juros",
+    "image": "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1600",
+    "active": true
+  },
+  {
+    "id": "ban-3",
+    "title": "Peças de Reposição & Alta Performance",
+    "subtitle": "Tudo para CG, Titan, Biz, Bros, Fazer, XRE e muito mais",
+    "image": "https://images.unsplash.com/photo-1590201146747-d352bc85fbcc?auto=format&fit=crop&q=80&w=1600",
     "active": true
   }
 ]

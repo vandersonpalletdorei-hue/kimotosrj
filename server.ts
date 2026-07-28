@@ -203,12 +203,24 @@ app.post('/api/products', async (req, res) => {
       // Fallback if preco_original column does not exist
       if (result.error && result.error.message.includes("preco_original")) {
         console.warn("[Supabase] preco_original column missing, retrying without it");
-        mapped = mapped.map(({ preco_original, ...rest }) => rest);
+        mapped = mapped.map(({ preco_original, ...rest }: any) => rest as any);
         result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
       }
 
       if (result.error) {
         console.error('[Supabase] Error saving products in real-time:', result.error.message);
+      }
+
+      // Cleanup products in Supabase that were deleted locally
+      const currentIds = products.map((p: any) => p.id);
+      if (currentIds.length > 0) {
+        const { data: remoteProducts } = await supabase.from('produtos').select('id');
+        if (remoteProducts) {
+          const idsToDelete = remoteProducts.map((rp: any) => rp.id).filter((id: string) => !currentIds.includes(id));
+          if (idsToDelete.length > 0) {
+            await supabase.from('produtos').delete().in('id', idsToDelete);
+          }
+        }
       }
 
       return res.json({ success: true, message: 'Saved and replicated to Supabase cloud successfully!' });
@@ -219,6 +231,27 @@ app.post('/api/products', async (req, res) => {
   }
 
   return res.json({ success: true, message: 'Saved locally.' });
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
+  const currentProducts = readLocalProducts().filter((p: any) => p.id !== id);
+  writeLocalProducts(currentProducts);
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('produtos').delete().eq('id', id);
+      if (error) {
+        console.error('[Supabase] Error deleting product from cloud:', error.message);
+      } else {
+        console.log(`[Supabase] Successfully deleted product ${id} from cloud.`);
+      }
+    } catch (err: any) {
+      console.error('[Supabase] Exception deleting product:', err.message);
+    }
+  }
+
+  return res.json({ success: true, message: 'Produto deletado com sucesso!' });
 });
 
 // --- API Endpoints: Categories ---
@@ -275,19 +308,66 @@ app.post('/api/categories', async (req, res) => {
   return res.json({ success: true, message: 'Saved locally.' });
 });
 
+app.delete('/api/categories/:id', async (req, res) => {
+  const { id } = req.params;
+  const currentCategories = readLocalCategories().filter((c: any) => c.id !== id);
+  writeLocalCategories(currentCategories);
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('categorias').delete().eq('id', id);
+      if (error) {
+        console.error('[Supabase] Error deleting category from cloud:', error.message);
+      } else {
+        console.log(`[Supabase] Successfully deleted category ${id} from cloud.`);
+      }
+    } catch (err: any) {
+      console.error('[Supabase] Exception deleting category:', err.message);
+    }
+  }
+
+  return res.json({ success: true, message: 'Categoria deletada com sucesso!' });
+});
+
 // --- API Endpoints: Banners ---
 app.get('/api/banners', async (req, res) => {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('banners').select('*');
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return res.json({ banners: data, source: 'supabase' });
       }
     } catch (e) {
       console.warn("Banners table likely does not exist yet. Falling back to local.");
     }
   }
-  res.json({ banners: readLocalBanners(), source: 'local' });
+  let localBanners = readLocalBanners();
+  if (!Array.isArray(localBanners) || localBanners.length === 0) {
+    localBanners = [
+      {
+        id: "ban-1",
+        title: "Kimotos Motopeças - As Melhores Peças e Acessórios",
+        subtitle: "Qualidade, durabilidade e entrega rápida para sua moto",
+        image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=1600",
+        active: true
+      },
+      {
+        id: "ban-2",
+        title: "Capacetes e Equipamentos de Segurança",
+        subtitle: "As melhores marcas com parcelamento em até 4x sem juros",
+        image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1600",
+        active: true
+      },
+      {
+        id: "ban-3",
+        title: "Peças de Reposição & Alta Performance",
+        subtitle: "Tudo para CG, Titan, Biz, Bros, Fazer, XRE e muito mais",
+        image: "https://images.unsplash.com/photo-1590201146747-d352bc85fbcc?auto=format&fit=crop&q=80&w=1600",
+        active: true
+      }
+    ];
+  }
+  res.json({ banners: localBanners, source: 'local' });
 });
 
 app.post('/api/banners', async (req, res) => {
@@ -421,7 +501,7 @@ app.post('/api/supabase/push', async (req, res) => {
       let result = await supabase.from('produtos').upsert(mappedProds, { onConflict: 'id' });
       if (result.error && result.error.message.includes("preco_original")) {
         console.warn("[Supabase] preco_original column missing, retrying without it during push");
-        mappedProds = mappedProds.map(({ preco_original, ...rest }) => rest);
+        mappedProds = mappedProds.map(({ preco_original, ...rest }: any) => rest as any);
         result = await supabase.from('produtos').upsert(mappedProds, { onConflict: 'id' });
       }
 
