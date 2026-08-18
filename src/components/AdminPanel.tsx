@@ -44,8 +44,6 @@ export default function AdminPanel({
   onCategoriesUpdate,
   onBannersUpdate
 }: AdminPanelProps) {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState<'status' | 'prod' | 'cat' | 'banner'>('status');
   
   // Auth State
@@ -270,7 +268,7 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
       const isHelmet = initialCat === 'capacetes';
       setEditingProduct(null);
       setItemForm({
-        id: `prod-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: `prod-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
         name: '',
         brand: '',
         price: 0,
@@ -329,10 +327,10 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
 
     // Try server sync
     try {
-      await fetch('/api/products', {
-        method: 'POST',
+      await fetch('/api/product', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: updatedProducts })
+        body: JSON.stringify({ product: updatedForm })
       });
       fetchSupabaseStatus();
       setProductMessage({ type: 'success', text: 'Peça gravada com sucesso no banco de dados!' });
@@ -351,17 +349,29 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
       } catch (e) {
         console.warn('Could not update kimotos_products in localStorage cache:', e);
       }
-      const res = await fetch('/api/products', {
+      
+      setProductMessage({ type: 'success', text: 'Sincronizando...' });
+      
+      const chunkSize = 40;
+      for (let i = 0; i < products.length; i += chunkSize) {
+        const chunk = products.slice(i, i + chunkSize);
+        const res = await fetch('/api/products/chunk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ products: chunk })
+        });
+        if (!res.ok) throw new Error('Chunk failed');
+      }
+
+      // After chunking, trigger a cleanup call
+      await fetch('/api/products/cleanup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products })
+        body: JSON.stringify({ currentIds: products.map(p => p.id) })
       });
-      if (res.ok) {
-        setProductMessage({ type: 'success', text: 'Alterações de motopeças gravadas no banco de dados!' });
-        fetchSupabaseStatus();
-      } else {
-        setProductMessage({ type: 'error', text: 'Erro ao gravar no banco de dados!' });
-      }
+
+      setProductMessage({ type: 'success', text: 'Alterações de motopeças gravadas no banco de dados!' });
+      fetchSupabaseStatus();
     } catch (error) {
       console.error('Erro ao salvar produtos:', error);
       setProductMessage({ type: 'error', text: 'Erro de conexão ao salvar!' });
@@ -511,6 +521,8 @@ create policy "Escrita irrestrita" on public.banners for all using (true) with c
       setTimeout(() => setCategoryMessage(null), 3500);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden font-sans">

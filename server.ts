@@ -126,7 +126,7 @@ function writeLocalBanners(banners: any[]) {
 app.get('/api/products', async (req, res) => {
   if (supabase) {
     try {
-      const { data, error } = await supabase.from('produtos').select('*');
+      const { data, error } = await supabase.from('produtos').select('*').limit(5000);
       if (!error && data) {
         // filter out unconfigured rows to return the exact 77 products
         const formatted = data
@@ -160,6 +160,152 @@ app.get('/api/products', async (req, res) => {
     }
   }
   return res.json({ products: readLocalProducts(), source: 'local' });
+});
+
+app.put('/api/product', async (req, res) => {
+  const { product } = req.body;
+  if (!product) return res.status(400).json({ error: 'Body must contain a product.' });
+
+  let currentProducts = readLocalProducts();
+  const existingIndex = currentProducts.findIndex((p: any) => p.id === product.id);
+  if (existingIndex >= 0) {
+    currentProducts[existingIndex] = product;
+  } else {
+    currentProducts.unshift(product);
+  }
+  writeLocalProducts(currentProducts);
+
+  if (supabase) {
+    try {
+      const p = product;
+      let mapped = [{
+        id: p.id,
+        codigo: p.id,
+        nome: p.name,
+        categoria: p.category,
+        categoria_label: p.categoryLabel || p.category,
+        marca: p.brand || '',
+        preco: p.price,
+        preco_original: p.originalPrice || null,
+        imagem: p.image,
+        imagens: p.images || null,
+        descricao: p.description || '',
+        avaliacao: p.rating || 5.0,
+        num_avaliacoes: p.reviewsCount || 0,
+        em_promocao: !!p.isPromo,
+        novo: !!p.isNew,
+        frete_gratis: !!p.freeShipping,
+        tamanhos: p.sizes || null,
+        estoque: p.stock || 0,
+        subcategoria: p.subcategory || '',
+        atributos: p.attributes || null
+      }];
+
+      let result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
+      
+      if (result.error && result.error.message.includes("preco_original")) {
+        console.warn("[Supabase] preco_original column missing, retrying without it");
+        mapped = mapped.map(({ preco_original, ...rest }: any) => rest as any);
+        result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
+      }
+
+      if (result.error) {
+        console.error('[Supabase] Error saving single product in real-time:', result.error.message);
+        return res.status(500).json({ error: result.error.message });
+      }
+
+      return res.json({ success: true, message: 'Saved single product to Supabase cloud successfully!' });
+    } catch (err: any) {
+      console.error('[Supabase] Exception replicating single product:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  return res.json({ success: true, message: 'Saved locally.' });
+});
+
+app.post('/api/products/chunk', async (req, res) => {
+  const { products } = req.body;
+  if (!Array.isArray(products)) return res.status(400).json({ error: 'Body must contain products array' });
+
+  let currentProducts = readLocalProducts();
+  products.forEach((product: any) => {
+    const existingIndex = currentProducts.findIndex((p: any) => p.id === product.id);
+    if (existingIndex >= 0) {
+      currentProducts[existingIndex] = product;
+    } else {
+      currentProducts.push(product);
+    }
+  });
+  writeLocalProducts(currentProducts);
+
+  if (supabase) {
+    try {
+      let mapped = products.map((p: any) => ({
+        id: p.id,
+        codigo: p.id,
+        nome: p.name,
+        categoria: p.category,
+        categoria_label: p.categoryLabel || p.category,
+        marca: p.brand || '',
+        preco: p.price,
+        preco_original: p.originalPrice || null,
+        imagem: p.image,
+        imagens: p.images || null,
+        descricao: p.description || '',
+        avaliacao: p.rating || 5.0,
+        num_avaliacoes: p.reviewsCount || 0,
+        em_promocao: !!p.isPromo,
+        novo: !!p.isNew,
+        frete_gratis: !!p.freeShipping,
+        tamanhos: p.sizes || null,
+        estoque: p.stock || 0,
+        subcategoria: p.subcategory || '',
+        atributos: p.attributes || null
+      }));
+
+      let result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
+      if (result.error && result.error.message.includes("preco_original")) {
+        mapped = mapped.map(({ preco_original, ...rest }: any) => rest as any);
+        result = await supabase.from('produtos').upsert(mapped, { onConflict: 'id' });
+      }
+
+      if (result.error) throw result.error;
+      return res.json({ success: true, message: 'Chunk saved' });
+    } catch (err: any) {
+      console.error('[Supabase] Exception in chunk sync:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  return res.json({ success: true });
+});
+
+app.post('/api/products/cleanup', async (req, res) => {
+  const { currentIds } = req.body;
+  if (!Array.isArray(currentIds)) return res.status(400).json({ error: 'Body must contain currentIds' });
+
+  // Update local
+  let currentProducts = readLocalProducts();
+  currentProducts = currentProducts.filter((p: any) => currentIds.includes(p.id));
+  writeLocalProducts(currentProducts);
+
+  if (supabase && currentIds.length > 0) {
+    try {
+      const { data: remoteProducts } = await supabase.from('produtos').select('id');
+      if (remoteProducts) {
+        const idsToDelete = remoteProducts.map((rp: any) => rp.id).filter((id: string) => !currentIds.includes(id));
+        if (idsToDelete.length > 0) {
+          await supabase.from('produtos').delete().in('id', idsToDelete);
+        }
+      }
+      return res.json({ success: true, message: 'Cleanup complete' });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  return res.json({ success: true });
 });
 
 app.post('/api/products', async (req, res) => {
